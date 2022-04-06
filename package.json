@@ -1,19 +1,25 @@
 {
-  "name": "@podfiles/minimal",
-  "version": "0.0.1",
+  "name": "dotfiles",
+  "version": "0.0.2",
   "license": "MIT",
   "author": "Nicholas Berlette <nick@berlette.com>",
-  "description": "Some personal preferences for workspaces on Gitpod.io",
-  "repository": "nberlette/podfiles",
-  "bugs": "https://github.com/nberlette/podfiles/issues",
-  "readme": "https://github.com/nberlette/podfiles#readme",
-  "homepage": "https://podfiles.ml",
+  "description": "Dotfiles configuration for Gitpod and local development",
+  "repository": "nberlette/dotfiles",
+  "bugs": "https://github.com/nberlette/dotfiles/issues",
+  "readme": "https://github.com/nberlette/dotfiles#readme",
+  "homepage": "https://dotfiles.ml",
   "keywords": [
     "dotfiles",
-    "gitpod"
+    "gitpod",
+		"podfiles",
+		"config"
   ],
   "prettier": "@brlt/prettier/bash",
-  "main": "index.js",
+  "main": "./install.sh",
+	"packageManager": "pnpm@6.32.4",
+	"publishConfig": {
+		"access": "public"
+	},
   "scripts": {
 		"build": "./install.sh",
     "test": "pnpm lint && pnpm check",

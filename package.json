@@ -1,0 +1,32 @@
+{
+  "name": "@podfiles/minimal",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Nicholas Berlette <nick@berlette.com>",
+  "description": "Some personal preferences for workspaces on Gitpod.io",
+  "repository": "nberlette/podfiles",
+  "bugs": "https://github.com/nberlette/podfiles/issues",
+  "readme": "https://github.com/nberlette/podfiles#readme",
+  "homepage": "https://podfiles.ml",
+  "keywords": [
+    "dotfiles",
+    "gitpod"
+  ],
+  "prettier": "@brlt/prettier/bash",
+  "main": "index.js",
+  "scripts": {
+		"build": "./install.sh",
+    "test": "pnpm lint && pnpm check",
+    "check": "shellcheck --color=always --shell=bash -x .{path,functions,bash*,exports}",
+    "lint": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --prettier-plugin-sh --check \"**/*\" \"**/.*\"",
+    "format": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --plugin prettier-plugin-sh --write \"**/*\" \"**/.*\""
+  },
+  "devDependencies": {
+    "@antfu/ni": "^0.13.2",
+    "@brlt/prettier": "^1.6.4",
+		"pnpm": "^6.32.4",
+    "prettier": "^2.6.1",
+    "prettier-plugin-sh": "^0.8.1",
+    "shellcheck": "^1.1.0"
+  }
+}

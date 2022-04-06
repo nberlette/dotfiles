@@ -1,0 +1,60 @@
+{
+	"arrowParens": "avoid",
+	"bracketSameLine": true,
+	"bracketSpacing": true,
+	"filepath": ".",
+	"overrides": [
+		{
+			"files": "*.js",
+			"options": {
+				"parser": "babel",
+				"singleQuote": true,
+				"semi": true
+			}
+		},
+		{
+			"files": ["*.sh", ".bashrc", ".bash_*", ".exports", ".functions", ".path", "lib/*", ".utilities"],
+			"options": {
+				"parser": "sh",
+				"plugins": ["prettier-plugin-sh"],
+				"pluginSearchDirs": [".", "node_modules"],
+				"printWidth": 100
+			}
+		},
+		{
+			"files": ["*.svelte", "*.svelte.md", "*.svx"],
+			"options": {
+				"parser": "svelte",
+				"plugins": ["svelte3"],
+				"pluginSearchDirs": [".", "node_modules"],
+				"semi": false,
+				"singleQuote": false,
+				"embeddedLanguageFormatting": "auto",
+				"svelteAllowShorthand": true,
+				"svelteBracketNewLine": false,
+				"svelteIndentScriptAndStyle": true,
+				"svelteSortOrder": "scripts-options-markup-styles",
+				"svelteStrictMode": false
+			}
+		},
+		{
+			"files": ["*.vue"],
+			"options": {
+				"parser": "vue",
+				"plugins": ["vue"],
+				"pluginSearchDirs": [".", "node_modules"],
+				"semi": false,
+				"singleQuote": false,
+				"vueIndentScriptAndStyle": true
+			}
+		}
+	],
+	"printWidth": 120,
+	"proseWrap": "preserve",
+	"quoteProps": "consistent",
+	"semi": true,
+	"singleQuote": true,
+	"tabWidth": 2,
+	"trailingComma": "es5",
+	"useTabs": true
+}

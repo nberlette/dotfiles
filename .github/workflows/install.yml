@@ -1,0 +1,36 @@
+name: 'Test Install Script'
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    name: 'Setup on ${{ matrix.os }}'
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    env:
+      WORKSPACE_DIR: ${{github.workspace}}
+      DOTFILES: '.dotfiles'
+      DOTFILES_PREFIX: ~/.dotfiles
+
+    steps:
+      - name: 'Checkout repository'
+        uses: actions/checkout@master
+
+      - name: 'Move files to ~/.dotfiles'
+        run: |
+          DOTFILES_PREFIX="$HOME/${DOTFILES:-.dotfiles}"
+          cd $HOME && cp -R -v "$WORKSPACE_DIR" "$DOTFILES_PREFIX"
+          cd $DOTFILES_PREFIX
+
+      - name: 'Run install.sh'
+        run: ./install.sh
+        shell: bash
+
+      - if: success()
+        name: '🟩 install complete?'
+        run: |
+          printf '\n\n\e[0;1;42;38;2;255;255;255m TEST SETUP COMPLETE! \e[0;1;2;3m  %s\e[0m\n\n' "dotfiles installation appears to have completed without issue!"$'\n\n'$"You can safely deploy this configuration in your macOS or Linux environment."
+          exit 0

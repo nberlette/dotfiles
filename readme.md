@@ -1,64 +1,63 @@
-# `gitpod + dotfiles = `***`podfiles`***
+# <img src="https://cdn.berlette.com/svg/dotfiles.svg" alt="" width="36" align="left" /> dotfiles
 
-Some personal preferences for workspaces on Gitpod.io
+Some personal preferences for my dev workspaces on Gitpod.io (and local macOS machines).
 
 ## Installation
 
-Before installing, you need to copy the files from this repository to your development machine.  
+Before installing, you need to copy the files from this repository to your development machine.
 
-### Automated (by Gitpod)
+### Automated (thanks to Gitpod)
 
 This cloning (and install process) can now be done automatically by Gitpod for **every workspace**! Open your [Gitpod Dashboard](https://gitpod.io/dashboard), and add this url to the `Dotfiles` preference input field at the bottom of the page:
 
-    https://github.com/nberlette/podfiles.git
+    https://github.com/nberlette/dotfiles.git
 
-Whenever you fire up a new workspace, Gitpod will copy the latest version of `podfiles` and pre-install everything for you ahead of time.
+Whenever you fire up a new workspace, Gitpod will copy the latest version of `dotfiles` and pre-install everything for you ahead of time.
 
 ### Manually Installing
 
 Want to install these dotfiles on an already-running workspace? That's cool too! Before proceeding to install them manually, you need to copy the files from this repository to your workspace.
 
-Here's a few popular methods:  
+Here's a few popular methods:
 
 <details open><summary><strong><code>degit</code></strong> (recommended)</summary>
 
 ```bash
-degit nberlette/podfiles ~/.dotfiles && cd ~/.dotfiles
+degit nberlette/dotfiles ~/.dotfiles
 ```
 
 </details>
-<details><summary><strong><code>gh</code></strong> (github cli)</summary>
+<details open><summary><strong><code>gh</code></strong> (github cli)</summary>
 
 ```bash
-gh repo clone nberlette/podfiles ~/.dotfiles && cd ~/.dotfiles
+gh repo clone nberlette/dotfiles ~/.dotfiles
 ```
 
 </details>
 <details><summary><strong><code>git</code></strong> (available almost everywhere)</summary>
 
 ```bash
-git clone --depth 1 nberlette/podfiles ~/.dotfiles && cd ~/.dotfiles
+git clone --depth 1 https://github.com/nberlette/dotfiles.git ~/.dotfiles
 ```
 
 </details>
 
+---
+
+<br>
 
 ## Run the installer
 
-You can directly run the `install.sh` script, or use the `make` command to cherrypick features.
-
 ```bash
-./install.sh
-
-# or using make:
-make install
+cd ~/.dotfiles && ./install.sh
 ```
 
-## License
+Have fun!
 
-MIT © [Nicholas Berlette](https://github.com/nberlette).
+If you have any ideas or find a bug, please submit a PR - contributions are welcome!!
 
-### Acknowledgements
+---
 
-Heavily inspired by [`jessfraz/dotfiles`](https://github.com/jessfraz/dotfiles). Thanks Jessica!
+
+MIT © [Nicholas Berlette](https://github.com/nberlette). Overly inspired by [`jessfraz/dotfiles`](https://github.com/jessfraz/dotfiles). Thanks Jess!
 

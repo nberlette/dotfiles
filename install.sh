@@ -16,24 +16,25 @@ function setup_home() {
 	OSYS="$(uname | tr '[:upper:]' '[:lower:]')"
 
 	# bash env, etc.
-	for FILE in $(find "${DIR:+$DIR}" -type f -name ".*" -not -name ".git*" -not -name ".*swp" -depth 1); do
+	for FILE in $(find -type f -name ".*" -not -name ".git*" -not -name ".*swp" "${DIR:+$DIR}"); do
 		# local d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		local b="$(basename -- "$FILE")"
 		ln -sfn "$FILE" "$HOME/$b"
 	done
 
 	# .gitconfig.d
-	for FILE in $(find "${DIR:+"$DIR/"}.gitconfig.d" -type f -name "*" -not -name "*.swp" -not -name ".*" -depth 1); do
+	for FILE in $(find -type f -name "*" -not -name "*.swp" -not -name ".*" "${DIR:+"$DIR/"}.gitconfig.d"); do
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
 		ln -sfn "$FILE" "$d/$b"
 	done
-	ln -sfn "$DIR/.gitconfig" "$HOME/.gitconfig"
-	ln -sfn "$DIR/.gitignore" "$HOME/.gitignore"
+
+	ln -f "$DIR/.gitconfig" "$HOME/.gitconfig"
+	ln -f "$DIR/.gitignore" "$HOME/.gitignore"
 
 	# GNUPG
-	for FILE in $(find "${DIR:+"$DIR/"}.gnupg" -type f -name "*.conf" -depth 1); do
+	for FILE in $(find -type f -name "*.conf" "${DIR:+"$DIR/"}.gnupg"); do
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
@@ -50,6 +51,8 @@ function setup_brew() {
 
 	# execute now just to be sure its available for us immediately
 	eval "$(brew shellenv 2> /dev/null)"
+
+	brew install "${verbosity-}" --overwrite starship gh bash
 
 	# don't install when we're in a gitpod environment
 	# otherwise this step takes > 120 seconds and fails to install.

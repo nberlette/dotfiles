@@ -1,49 +1,47 @@
 #!/usr/bin/env bash
 
-if [ -z "$CI" ]
-then 
-    talkative="--quiet"
-else 
-    talkative="--verbose"
-fi
+[ -z "$CI" ] && verbosity="--quiet" || verbosity="--verbose";
+OSYS="$(uname | tr '[:upper:]' '[:lower:]')";
+[ "$OSYS" = "darwin" ] && IS_DARWIN=1;
 
 function curdir () {
-	printf "%s" "$(readlink -f "$(dirname -- "${BASH_SOURCE[0]}")")" || echo -n "$PWD";
+	printf "%s" "$(readlink ${IS_DARWIN:+"-f"} "$(dirname -- "${BASH_SOURCE[0]}")")" || echo -n "$PWD";
 }
 
 # setup our new homedir with symlinks to all the dotfiles
 function setup_home() {
-	local DIR file d b
-	os="$(uname | tr '[:upper:]' '[:lower:]')"
-	DIR="$(readlink -f "$(dirname -- "${BASH_SOURCE[0]}")")"
-	for file in $(find "${DIR:-.}" -type f -name ".*" -not -name ".git*" -not -name ".*swp" -depth 1); do
-		# local d="$(dirname -- "$file" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
-		local b="$(basename -- "$file")"
-		ln -sfn "$file" "$HOME/$b"
+	local DIR FILE d b OSYS IS_DARWIN
+	DIR="$(curdir)"
+	OSYS="$(uname | tr '[:upper:]' '[:lower:]')"
+
+	# bash env, etc.
+	for FILE in $(find "${DIR:+$DIR}" -type f -name ".*" -not -name ".git*" -not -name ".*swp" -depth 1); do
+		# local d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
+		local b="$(basename -- "$FILE")"
+		ln -sfn "$FILE" "$HOME/$b"
 	done
-	for file in $(find "${DIR:-.}/.gitconfig.d" -type f -name "*" -not -name "*.swp" -not -name "*.*" -depth 1); do
-		d="$(dirname -- "$file" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
-		b="$(basename -- "$file")"
+
+	# .gitconfig.d
+	for FILE in $(find "${DIR:+"$DIR/"}.gitconfig.d" -type f -name "*" -not -name "*.swp" -not -name ".*" -depth 1); do
+		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
+		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
-		ln -sfn "$file" "$d/$b"
-	done
-	for file in $(find "${DIR:-.}/.gnupg" -type f -name "*.conf" -depth 1); do
-		d="$(dirname -- "$file" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
-		b="$(basename -- "$file")"
-		mkdir -p "$d" > /dev/null 2>&1
-		ln -sfn "$file" "$d/$b"
+		ln -sfn "$FILE" "$d/$b"
 	done
 	ln -sfn "$DIR/.gitconfig" "$HOME/.gitconfig"
 	ln -sfn "$DIR/.gitignore" "$HOME/.gitignore"
+
+	# GNUPG
+	for FILE in $(find "${DIR:+"$DIR/"}.gnupg" -type f -name "*.conf" -depth 1); do
+		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
+		b="$(basename -- "$FILE")"
+		mkdir -p "$d" > /dev/null 2>&1
+		ln -sfn "$FILE" "$d/$b"
+	done
 }
 
 # install homebrew (if needed) and some commonly-used global packages. the bare minimum.
 function setup_brew() {
-	local os is_macos talkative
-	[ -z "$CI" ] && talkative="--quiet" || talkative="--verbose"
-	os="$(uname | tr '[:upper:]' '[:lower:]')"
-	[ "$os" = "darwin" ] && is_macos=1
-
 	# install homebrew if not already installed
 	if ! which brew >&/dev/null; then
 		curl -fsSL https://raw.github.com/Homebrew/install/HEAD/install.sh | bash -
@@ -56,38 +54,37 @@ function setup_brew() {
 	# otherwise this step takes > 120 seconds and fails to install.
 	# also skip this step if we're in CI/CD (github actions), because reasons.
 	if [ -z "$GITPOD_TASKS" ] && [ -z "$CI" ]; then
-	    
-	    # install some essentials
-	    brew install "${talkative-}" --overwrite \
-		gcc \
-		cmake \
-		make \
-		bash \
-		gh \
-		git \
-		git-extras \
-		go \
-		python \
-		pygments \
-		shfmt \
-		jq \
-		neovim \
-		starship \
-		lolcat \
-		fontforge \
-		supabase/tap/supabase \
-		docker \
-		shellcheck \
-		fzf \
+	  # install some essentials
+	  brew install "${verbosity-}" --overwrite \
+			gcc \
+			cmake \
+			make \
+			bash \
+			gh \
+			git \
+			git-extras \
+			go \
+			python \
+			pygments \
+			shfmt \
+			jq \
+			neovim \
+			starship \
+			lolcat \
+			fontforge \
+			supabase/tap/supabase \
+			docker \
+			shellcheck \
+			fzf \
 		2> /dev/null
 
-		
-	    ###  macOS stuff
-	    ### --------------------------------- ###
-	    if [[ "$(uname -s)" == "Darwin" ]]; then
-		brew tap jeroenknoops/tap
-		brew install "${talkative-}" \
-			gcc coreutils gitin gpg gpg-suite pinentry-mac python3
+	  ### --------------------------------- ###
+
+		# for macOS
+	  if [[ "$(uname -s)" == "Darwin" ]]; then
+				brew tap jeroenknoops/tap
+				brew install "${verbosity-}" \
+					gcc coreutils gitin gpg gpg-suite pinentry-mac python3
 
 			export SHELL="${HOMEBREW_PREFIX:-}/bin/bash"
 			brew install --quiet --cask iterm2
@@ -102,7 +99,7 @@ function setup_brew() {
 				google-chrome google-chrome-canary firefox firefox-nightly
 
 	    else
-		brew install --overwrite gnupg gnupg2
+				brew install --overwrite gnupg gnupg2
 	    fi
 	fi
 }
@@ -134,23 +131,18 @@ function setup_node() {
 		pnpm env use -g "${node_v:-lts}" 2> /dev/null || pnpm env use -g lts
 	fi
 
-	global_add \
-		pnpm npm yarn @antfu/ni degit @types/node typescript tslib tsm \
-		tsup ts-node eslint standard prettier prettier-plugin-sh \
-		shellcheck vercel turbo wrangler@0.0.24 miniflare@2.4.0 \
-		@dotenv/cli worktop@next svelte @sveltejs/kit@next \
-		tailwindcss postcss autoprefixer windicss sirv-cli microbundle \
-		2> /dev/null
+	# global_add @antfu/ni degit @types/node typescript tslib tsm tsup ts-node eslint standard prettier prettier-plugin-sh svelte @sveltejs/kit@next tailwindcss postcss autoprefixer windicss sirv-cli microbundle
 
+	global_add @antfu/ni @dotenv/cli vercel turbo wrangler@beta miniflare@latest cron-scheduler worktop@next 2>/dev/null
 	unset -f global_add
 }
 
 # runs all the other scripts and cleans up after itself. geronimo!
 function main() {
-	clear
+	clear;
 	echo -e "\\n\\033[1mBeginning dotfiles install. This may take a while...\\033[0m"
 	echo -e "-------------------------------------------------------\\n"
-	echo "WORKDIR: $(readlink -f "$(dirname -- "${BASH_SOURCE[0]}")")"
+	echo "WORKDIR: $(curdir)")"
 
 	if [[ "$(uname -s)" == "Darwin" ]]; then
 		export PATH="$HOME/Library/pnpm:/usr/local/bin:/usr/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"
@@ -159,24 +151,33 @@ function main() {
 	fi
 
 	echo "Installing homebrew (if needed) and packages..."
-	setup_brew && unset -f setup_brew
+	setup_brew || exit $?
+	unset -f setup_brew
 	sleep 1 && clear
 
 	echo "Finished homebrew setup. Installing Node.js and PNPM..."
-	setup_node && unset -f setup_node
+	setup_node || exit $?
+	unset -f setup_node
 	sleep 1 && clear
 
 	echo "Finished Node/PNPM setup. Linking dotfiles to HOMEDIR..."
-	setup_home && unset -f setup_home
+	setup_home || exit $?
+	unset -f setup_home
 	sleep 1 && clear
 
-	echo "Done! Restarting Bash env, buckle your seatbelt..."
+	echo "Done! Restarting bash.... fasten your seatbelts!"
 	sleep 3 && clear
 
+	# clean up environment
+	unset -v OSYS IS_DARWIN curdir verbosity
+
 	# shellcheck source=/dev/null
-	source $HOME/.bashrc 2> /dev/null || return 4
+	source $HOME/.bashrc 2> /dev/null || return 5
 	return 0
 }
 
 # run it and clean up after!
 main && unset -f main && exit 0
+
+# still here? throw codes bro
+exit $?

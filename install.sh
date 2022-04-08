@@ -143,7 +143,7 @@ function main() {
 	clear;
 	echo -e "\\n\\033[1mBeginning dotfiles install. This may take a while...\\033[0m"
 	echo -e "-------------------------------------------------------\\n"
-	echo "WORKDIR: $(curdir)")"
+	echo "WORKDIR: $(curdir)"
 
 	if [[ "$(uname -s)" == "Darwin" ]]; then
 		export PATH="$HOME/Library/pnpm:/usr/local/bin:/usr/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:$PATH"

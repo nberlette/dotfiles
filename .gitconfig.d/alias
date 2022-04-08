@@ -60,6 +60,8 @@
 	plm = "!_git_plm() { git f; git co master; git pp; git s; }; _git_plm"
 	plu = "!_git_plu() { git f; git co master; git up; git s; }; _git_plu"
 
+	push = push --follow-tags
+
 	ps   = push
 	pso  = push           origin
 	psvo = push --verbose origin
@@ -83,6 +85,5 @@
 	undo = checkout --
 
 	up = p --rebase
-
 
 # vim: set filetype=gitconfig ts=2 sw=2 tw=0 noet :

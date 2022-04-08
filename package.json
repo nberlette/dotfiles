@@ -1,6 +1,6 @@
 {
   "name": "dotfiles",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "author": "Nicholas Berlette <nick@berlette.com>",
   "description": "Dotfiles configuration for Gitpod and local development",
@@ -11,17 +11,17 @@
   "keywords": [
     "dotfiles",
     "gitpod",
-		"podfiles",
-		"config"
+    "podfiles",
+    "config"
   ],
   "prettier": "@brlt/prettier/bash",
   "main": "./install.sh",
-	"packageManager": "pnpm@6.32.4",
-	"publishConfig": {
-		"access": "public"
-	},
+  "packageManager": "pnpm@6.32.4",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-		"build": "./install.sh",
+    "build": "./install.sh",
     "test": "pnpm lint && pnpm check",
     "check": "shellcheck --color=always --shell=bash -x .{path,functions,bash*,exports}",
     "lint": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --prettier-plugin-sh --check \"**/*\" \"**/.*\"",
@@ -30,7 +30,7 @@
   "devDependencies": {
     "@antfu/ni": "^0.13.2",
     "@brlt/prettier": "^1.6.4",
-		"pnpm": "^6.32.4",
+    "pnpm": "^6.32.4",
     "prettier": "^2.6.1",
     "prettier-plugin-sh": "^0.8.1",
     "shellcheck": "^1.1.0"

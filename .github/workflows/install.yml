@@ -8,7 +8,7 @@ on: # run this workflow on push events and PR's to main/master and any releases/
       - "releases/**"
       - "feature/**"
 
-    # ignore any commits where significant files (that alter program functionality) were not changed 
+    # ignore any commits where significant files (that alter program functionality) were not changed
     paths-ignore:
       - readme.md
       - license*
@@ -23,8 +23,8 @@ jobs:
   build:
     name: 'Setup on ${{ matrix.os }}'
     runs-on: ${{matrix.os}}
-    fail-fast: true
     strategy:
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, macos-latest]
     env:

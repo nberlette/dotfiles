@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
+
+if [ -z "$CI" ]
+then 
+    talkative="--quiet"
+else 
+    talkative="--verbose"
+fi
+
+function curdir () {
+	printf "%s" "$(readlink -f "$(dirname -- "${BASH_SOURCE[0]}")")" || echo -n "$PWD";
+}
+
+# setup our new homedir with symlinks to all the dotfiles
 function setup_home() {
 	local DIR file d b
+	os="$(uname | tr '[:upper:]' '[:lower:]')"
 	DIR="$(readlink -f "$(dirname -- "${BASH_SOURCE[0]}")")"
 	for file in $(find "${DIR:-.}" -type f -name ".*" -not -name ".git*" -not -name ".*swp" -depth 1); do
 		# local d="$(dirname -- "$file" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
@@ -23,7 +37,7 @@ function setup_home() {
 	ln -sfn "$DIR/.gitignore" "$HOME/.gitignore"
 }
 
-# install homebrew if needed and some of the bare-minimum global packages
+# install homebrew (if needed) and some commonly-used global packages. the bare minimum.
 function setup_brew() {
 	local os is_macos talkative
 	[ -z "$CI" ] && talkative="--quiet" || talkative="--verbose"
@@ -38,8 +52,13 @@ function setup_brew() {
 	# execute now just to be sure its available for us immediately
 	eval "$(brew shellenv 2> /dev/null)"
 
-	# install some essentials
-	brew install "${talkative-}" --overwrite \
+	# don't install when we're in a gitpod environment
+	# otherwise this step takes > 120 seconds and fails to install.
+	# also skip this step if we're in CI/CD (github actions), because reasons.
+	if [ -z "$GITPOD_TASKS" ] && [ -z "$CI" ]; then
+	    
+	    # install some essentials
+	    brew install "${talkative-}" --overwrite \
 		gcc \
 		cmake \
 		make \
@@ -62,15 +81,14 @@ function setup_brew() {
 		fzf \
 		2> /dev/null
 
-	###  macOS stuff
-	### --------------------------------- ###
-	if [[ "$(uname -s)" == "Darwin" ]]; then
+		
+	    ###  macOS stuff
+	    ### --------------------------------- ###
+	    if [[ "$(uname -s)" == "Darwin" ]]; then
 		brew tap jeroenknoops/tap
 		brew install "${talkative-}" \
-			gcc coreutils gitin gpg gpg-suite pinentry-mac pip3 python3
+			gcc coreutils gitin gpg gpg-suite pinentry-mac python3
 
-		# install casks (apps) only if we're in a desktop (non-CI/CD) environment
-		if [ -z "$CI" ]; then
 			export SHELL="${HOMEBREW_PREFIX:-}/bin/bash"
 			brew install --quiet --cask iterm2
 			curl -fsSL https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash -
@@ -78,10 +96,14 @@ function setup_brew() {
 			# Google Chrome, Prisma, PIA VPN
 			brew tap homebrew/cask-versions
 			brew tap homebrew/cask-fonts
-			brew install --casks font-fira-code font-oswald font-ubuntu font-caskaydia-cove-nerd-font graphql-playground prisma-studio private-internet-access qlmarkdown google-chrome google-chrome-canary firefox firefox-nightly visual-studio-code fontforge
-		fi
-	else
+			brew install --casks font-fira-code font-oswald font-ubuntu font-caskaydia-cove-nerd-font fontforge \
+				graphql-playground prisma-studio private-internet-access qlmarkdown \
+				visual-studio-code visual-studio-code-insiders \
+				google-chrome google-chrome-canary firefox firefox-nightly
+
+	    else
 		brew install --overwrite gnupg gnupg2
+	    fi
 	fi
 }
 
@@ -155,4 +177,6 @@ function main() {
 	source $HOME/.bashrc 2> /dev/null || return 4
 	return 0
 }
+
+# run it and clean up after!
 main && unset -f main && exit 0

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-[ -z "$CI" ] && verbosity="--quiet" || verbosity="--verbose";
 OSYS="$(uname | tr '[:upper:]' '[:lower:]')";
 [ "$OSYS" = "darwin" ] && IS_DARWIN=1;
+[ -z "$CI" ] && verbosity="--quiet" || verbosity="--verbose";
+[ -z "$TERM" ] && TERM=xterm;
 
 function curdir () {
-	printf "%s" "$(readlink ${IS_DARWIN:+"-f"} "$(dirname -- "${BASH_SOURCE[0]}")")" || echo -n "$PWD";
+	echo -n "$(readlink $(test -z "$CI" && echo -n "-f" || echo -n "-n") "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null || echo -n "$(cd "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)")";
 }
 
 # setup our new homedir with symlinks to all the dotfiles

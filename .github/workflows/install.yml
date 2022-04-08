@@ -1,23 +1,19 @@
 name: 'Test Install Script'
 on: # run this workflow on push events and PR's to main/master and any releases/feature branches.
   push:
-  pull_request:
     branches:
       - main
-      - master
-      - "releases/**"
-      - "feature/**"
-
     # ignore any commits where significant files (that alter program functionality) were not changed
-    paths-ignore:
-      - readme.md
-      - license*
-      - ".github/**"
-      - pnpm-lock.yaml
-      - yarn.lock
-      - package-lock.json
-      - .prettier*
-
+    paths:
+      - ".*"
+      - "**/.*"
+      - "!readme.md"
+      - "!license*"
+      - "!.github/**"
+      - "!pnpm-lock.yaml"
+      - "!yarn.lock"
+      - "!package-lock.json"
+      - "!.prettier*"
   workflow_dispatch:
 jobs:
   build:

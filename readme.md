@@ -1,4 +1,4 @@
-# <img src="https://cdn.berlette.com/svg/dotfiles.svg" alt="" width="36" align="left" /> dotfiles
+# <img src="https://cdn.berlette.com/svg/dotfiles.svg" alt="" height="44" align="left"> `dotfiles`
 
 Some personal preferences for my dev workspaces on Gitpod.io (and local macOS machines).
 

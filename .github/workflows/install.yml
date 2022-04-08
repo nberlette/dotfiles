@@ -1,12 +1,29 @@
 name: 'Test Install Script'
-on:
+on: # run this workflow on push events and PR's to main/master and any releases/feature branches.
   push:
   pull_request:
+    branches:
+      - main
+      - master
+      - "releases/**"
+      - "feature/**"
+
+    # ignore any commits where significant files (that alter program functionality) were not changed 
+    paths-ignore:
+      - readme.md
+      - license*
+      - ".github/**"
+      - pnpm-lock.yaml
+      - yarn.lock
+      - package-lock.json
+      - .prettier*
+
   workflow_dispatch:
 jobs:
   build:
     name: 'Setup on ${{ matrix.os }}'
     runs-on: ${{matrix.os}}
+    fail-fast: true
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -26,11 +43,13 @@ jobs:
           cd $DOTFILES_PREFIX
 
       - name: 'Run install.sh'
-        run: ./install.sh
+        run: |
+          ./install.sh
+          exit $?
         shell: bash
 
       - if: success()
-        name: '🟩 install complete?'
+        name: '🟩 install complete'
         run: |
           printf '\n\n\e[0;1;42;38;2;255;255;255m TEST SETUP COMPLETE! \e[0;1;2;3m  %s\e[0m\n\n' "dotfiles installation appears to have completed without issue!"$'\n\n'$"You can safely deploy this configuration in your macOS or Linux environment."
           exit 0

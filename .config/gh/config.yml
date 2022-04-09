@@ -45,13 +45,13 @@ aliases:
   sec: secret
   # GPG keys
   gpg: gpg-key
-  'gpg k': gpg-key list
+  gpgk: gpg-key list
   keys: gpg-key list
   # SSH keys
   ssh: ssh-key
-  'ssh k': ssh-key list
+  sshk: ssh-key list
   # extensions
-  x:
+  x: extension
   nx: extension create
   xc: extension create
   xi: extension install
@@ -61,7 +61,6 @@ aliases:
   # extensions -> markdown-preview
   md: markdown-preview
   mdp: markdown-preview
-  # extensions
 
 # The path to a unix socket through which send HTTP connections. If blank, HTTP traffic will be handled by net/http.DefaultTransport.
 http_unix_socket:

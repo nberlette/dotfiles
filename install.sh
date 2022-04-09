@@ -11,9 +11,8 @@ function curdir () {
 
 # setup our new homedir with symlinks to all the dotfiles
 function setup_home() {
-	local DIR FILE d b OSYS IS_DARWIN
+	local DIR FILE d b
 	DIR="$(curdir)"
-	OSYS="$(uname | tr '[:upper:]' '[:lower:]')"
 
 	# bash env, etc.
 	for FILE in $(find -type f -name ".*" -not -name ".git*" -not -name ".*swp" "${DIR:+$DIR}"); do
@@ -60,7 +59,7 @@ function setup_brew() {
 	# execute now just to be sure its available for us immediately
 	eval "$(brew shellenv 2> /dev/null)"
 
-	brew install "${verbosity-}" --overwrite starship gh git-extras neovim lolcat shellcheck fontforge shfmt
+	brew install "${verbosity-}" --overwrite starship gh neovim lolcat shellcheck shfmt pygments
 
 	# don't install when we're in a gitpod environment
 	# otherwise this step takes > 120 seconds and fails to install.
@@ -77,17 +76,20 @@ function setup_brew() {
 			git-extras \
 			go \
 			python \
-			pygments \
+      fontforge \
 			jq \
 			supabase/tap/supabase \
 			docker \
 			fzf \
 		2> /dev/null
 
-	  ### --------------------------------- ###
+    # for developing jekyll sites (and other things for github pages, etc)
+    if which gem >&/dev/null; then
+      gem install jekyll builder jekyll-vite rouge
+    fi
 
 		# for macOS
-	  if [[ "$(uname -s)" == "Darwin" ]]; then
+	  if [ -n "$IS_DARWIN" ]; then
 				brew tap jeroenknoops/tap
 				brew install "${verbosity-}" \
 					gcc coreutils gitin gpg gpg-suite pinentry-mac python3
@@ -104,9 +106,9 @@ function setup_brew() {
 				visual-studio-code visual-studio-code-insiders \
 				google-chrome google-chrome-canary firefox firefox-nightly
 
-	    else
-				brew install --overwrite gnupg gnupg2
-	    fi
+    else
+			brew install --overwrite gnupg gnupg2
+	  fi
 	fi
 }
 

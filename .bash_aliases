@@ -20,43 +20,6 @@ Linux)
 	;;
 esac
 
-function resolve () {
-  local verbose
-  [[ "$1" == "-v" || "$1" == "--verbose" ]] && { verbose=1; shift; };
-  if [ -z "$1" ]; then
-
-cat<<USAGE
-
-$(bold && undl)USAGE$(reset)
-
-  $(bold && hex2rgb 8cc055)resolve$(reset) $(dark)[options]$(reset) $(ital && hex2rgb 8dddff)command...$(reset)
-
-$(bold && undl)SUMMARY$(reset)
-
-  Attempts to resolve the given command to an absolute path.
-  Similar to $(ital && bold && cyn)which$(reset) and $(ital && bold && cyn)type$(reset) in terms of functionality.
-
-  In silent mode it returns 0 if found, or 1 if not found.
-  If the flags $(ital && bold && ylw)--verbose$(reset) or $(ital && bold && ylw)-v$(reset) are provided, it will print
-  the resolved path to stdout (if any).
-
-$(bold && undl)OPTIONS$(reset)
-
-  $(ital && bold && ylw)-v, --verbose$(reset)         prints command's absolute path to stdout
-
-USAGE
-
-    return 1;
-  else
-    if [ -n "$verbose" ]; then
-      command -v which >&/dev/null && which "$@" 2>&1 || type -a "$@" 2>&1
-    else
-      command -v which >&/dev/null && return 0 || return 1;
-      return $?
-    fi
-  fi
-}
-
 # protip for aliasing all gnupg methods to their proper place
 for __ga in "convert-keyring" "dirmngr" "dirmngr-client" "gpg" "gpg2" "gpg-agent" "gpg-connect-agent" "gpg-error" "gpg-zip" "gpgconf" "gpgsm" "gpgsplit" "gpgtar" "gpgv" "kbxutil" "mpicalc" "watchgnupg"; do
 	if [ -x "/usr/local/bin/${__ga-}" ]; then

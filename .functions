@@ -32,6 +32,11 @@ function hex2rgb() {
           printf "%d%s%d%s%d" "$r" "$delim" "$g" "$delim" "$b"
         fi
       else
+        if [ -z "$raw" ]; then
+          __osc "${modifier:-38}" "2" "$r" "$g" "$b" | pbcopy
+        else
+          printf "%d%s%d%s%d" "$r" "$delim" "$g" "$delim" "$b" | pbcopy
+        fi
       fi
     done
   fi
@@ -75,6 +80,44 @@ alias status="__status"
 # super hacky "fix" (bandaid on a bullethole tbh) for gpg failure to initialize
 alias gpg_unlock='echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null'
 alias gpg_init='gpg_unlock >/dev/null && __status "ok" "GPG is ready to sign commits and tags" '
+
+
+function resolve () {
+  local verbose
+  [[ "$1" == "-v" || "$1" == "--verbose" ]] && { verbose=1; shift; };
+  if [ -z "$1" ]; then
+
+cat<<USAGE
+
+$(bold && undl)USAGE$(reset)
+
+  $(bold && hex2rgb 8cc055)resolve$(reset) $(dark)[options]$(reset) $(ital && hex2rgb 8dddff)command...$(reset)
+
+$(bold && undl)SUMMARY$(reset)
+
+  Attempts to resolve the given command to an absolute path.
+  Similar to $(ital && bold && cyn)which$(reset) and $(ital && bold && cyn)type$(reset) in terms of functionality.
+
+  In silent mode it returns 0 if found, or 1 if not found.
+  If the flags $(ital && bold && ylw)--verbose$(reset) or $(ital && bold && ylw)-v$(reset) are provided, it will print
+  the resolved path to stdout (if any).
+
+$(bold && undl)OPTIONS$(reset)
+
+  $(ital && bold && ylw)-v, --verbose$(reset)         prints command's absolute path to stdout
+
+USAGE
+
+    return 1;
+  else
+    if [ -n "$verbose" ]; then
+      command -v which >&/dev/null && which "$@" 2>&1 || type -a "$@" 2>&1
+    else
+      command -v which >&/dev/null && return 0 || return 1;
+      return $?
+    fi
+  fi
+}
 
 # Simple calculator
 function calc() {

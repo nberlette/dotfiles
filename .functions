@@ -1,67 +1,127 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2248,SC2086
+
+function __osc() {
+  local str ifs=$IFS; IFS=';'; str="$*"; IFS=$ifs;
+	printf '\%s[%sm' ${esc:-e} ${str:-0}
+}
+alias osc=__osc
+
+# convert hexadecimal colors to bash rgb format!
+# $ hex2rgb ffffff (default output format is foreground color, 38;2)
+# ...... \033[38;2;255;255;255m
+# $ hex2rgb -b ffffff -f 000000 (white background, black foreground)
+# ...... \033[38;2;0;0;0m\033[48;2;255;255;255m
 function hex2rgb() {
-	local hex r g b modifier
-	modifier=38
-	while (($# > 0)); do
-		if [ "$1" = "-b" ]; then
-			modifier=48
-			shift
-		fi
-		if [ "$1" = "-f" ]; then
-			modifier=38
-			shift
-		fi
-		hex="${1:-000000}"
-		[ "${hex:0:1}" = "#" ] && hex="${hex:1}"
-		hex="${hex#"#"}"
-		hex="$(echo -n "${hex-}" | grep -E '^([0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$' 2>&1 || echo -n 000000)"
-		printf -v r "%d" 0x"${hex:0:2}"
-		printf -v g "%d" 0x"${hex:2:2}"
-		printf -v b "%d" 0x"${hex:4:2}"
-		printf '\033[%d;%d;%d;%d;%dm' ${modifier:-38} 2 $r $g $b
-		shift 1
-	done
+	local raw modifier=38 delim=" " copy hex r g b
+  if (($# > 0)); then
+		[ "$1" = "-b" ] && { modifier=48; shift; };
+		[ "$1" = "-f" ] && { modifier=38; shift; };
+    [ "$1" = "-r" ] && { raw=1; shift; };
+    [ "$1" = "-d" ] && { delim="$2"; shift 2; };
+    [ "$1" = "-c" ] && { copy=1; shift; };
+
+    for hex in "$@"; do
+	  	hex="${hex//'#'/}"
+      printf -v r "%d" 0x"${hex:0:2}"
+      printf -v g "%d" 0x"${hex:2:2}"
+      printf -v b "%d" 0x"${hex:4:2}"
+      if [ -n "$copy" ]; then
+        if [ -z "$raw" ]; then
+          __osc "${modifier:-38}" "2" "$r" "$g" "$b"
+        else
+          printf "%d%s%d%s%d" "$r" "$delim" "$g" "$delim" "$b"
+        fi
+      else
+      fi
+    done
+  fi
 }
+
 function 2rgb() {
-	local hex output clean_output flip
-	if [ "$1" = "-b" ]; then {
-		flip=1
-		shift
-	}; fi
-	echo
+	local hex output
 	for hex in "$@"; do
-		output=$(hex2rgb "$hex")
-		clean_output="\\\033$(printf $output | tr -d '\033')"
-		[ -n "$flip" ] && clean_output=${clean_output/'[38'/'[48'}
-		echo -e "$output#${hex#\#}\033[0;2m  -->  \033[0${flip:+;7}m$output $clean_output  \033[0m${flip:+\033[2m  (bg) \033[0m}\n"
+		echo -e "[ #${hex#'#'} ]: "$(hex2rgb "$hex")' \\033['$(hex2rgb "$hex" | tr -d '\033[')' \033[0m\n'
 	done
 }
+
+## helper function for printing colorful status messages to the terminal
+# print success, warning, and error messages to the terminal. with color!
+function __status() {
+  local label color rst
+  label="INFO"
+  (($# > 1)) && { label="$(echo -n "$1" | tr '[:lower:]' '[:upper:]')"; shift; };
+  rst="$(tput sgr0)"
+  if [[ "$label" =~ ^(FAIL(URE)?|ERR(OR)?|FATAL|CRITICAL|EXCEPT(ION)?|THROWN?|FAULT)$ ]]; then
+    color="$(__osc 48 2 230 0 0 && wht)"
+    printf "${color-} %s ${rst-} %s\\n" "$label" "$*" 1>&2
+    return 1
+  elif [[ "$label" =~ ^(SUCCE(EDED|SS)|OK(AY)?|DONE|COMPLETED?|FINISH(ED)?|GOOD|GREAT)$ ]]; then
+    color="$(hex2rgb '#11dd22' && wht)"
+    printf "${color-} %s ${rst-} %s\\n" "$label" "$*" 2>&1
+    return 0
+  elif [[ "$label" =~ ^(WARN(ING)?|IMPORTANT|NON[-]?FATAL|CONT(INUING)?)$ ]]; then
+    color="$(hex2rgb '#dd2211' && wht)"
+    printf "${color-} %s ${rst-} %s\\n" "$label" "$*" 1>&2
+    return 1
+  else
+    color="$(cyn_b && blk)"
+    printf "${color-} %s ${rst-} %s\\n" "$label" "$*"
+    return 0
+  fi
+}
+alias __print_msg="__status"
+alias status="__status"
+
+# super hacky "fix" (bandaid on a bullethole tbh) for gpg failure to initialize
+alias gpg_unlock='echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null'
+alias gpg_init='gpg_unlock >/dev/null && __status "ok" "GPG is ready to sign commits and tags" '
+
+# Simple calculator
 function calc() {
 	local result=""
-	result="$(printf 'scale=10;%s\n' "$*" | bc --mathlib | tr -d '\\\n')"
-	if [[ $result == *.* ]]; then
-		printf "%s" "$result" | sed -e 's/^\./0./' \
-			-e 's/^-\./-0./' \
-			-e 's/0*$//;s/\.$//'
+	result="$(printf "scale=10;%s\\n" "$*" | bc --mathlib | tr -d '\\\n')"
+	#      └─ default (when `--mathlib` is used) is 20
+
+	if [[ "$result" == *.* ]]; then
+		# improve the output for decimal numbers
+		# add "0" for cases like ".5"
+		# add "0" for cases like "-.5"
+		# remove trailing zeros
+		printf "%s" "$result" \
+			| sed -e 's/^\./0./' \
+				-e 's/^-\./-0./' \
+				-e 's/0*$//;s/\.$//'
 	else
 		printf "%s" "$result"
 	fi
-	printf '\n'
+	printf "\\n"
 }
+
+# Pipe my public key to my clipboard.
 function pbkey() {
 	local key="${1:-id_rsa4096.pub}"
-	cat ~/.ssh/$key | pbcopy | success "The key named '${key-}' was copied to your clipboard." && return 0
+	# shellcheck disable=SC2086
+	cat ~/.ssh/$key | pbcopy | success "The key named '${key-}' was copied to your clipboard." \
+		&& return 0
 	return 1
 }
+
+# jq functions for da jsonz
 if which jq >&/dev/null; then
-	function jsons() {
-		jq "${1:-.}" "${2:-'./*.json'}"
+	function json() {
+    local script dir
+    script="${1:-.}"
+		jq "${script:-.}" "${dir:-.}"/*.json
 	}
 	function pkgjson() {
 		jq "${1:-.}" "${2:-./package.json}"
 	}
+  function quote() {
+    jq -R '.' "${1:-.}"
+  }
 fi
+
+# GitHub CLI Helpers
 if which gh >&/dev/null; then
 	function gists() {
 		gh gist list -L "${1:-100}"
@@ -74,67 +134,50 @@ if which gh >&/dev/null; then
 		fi
 	}
 fi
+
+# super hacky "fix" for signing git commits.
+# just use "commit" or "git-commit" instead of "git commit", and this will attempt a verified commit.
+# if it fails, it will prompt you to unlock your gpg-key and try again.
+# if that fails... I guess you're screwed, pal.
 function commit() {
 	git commit --gpg-sign "$@" 2> /dev/null || {
-		(echo "" | gpg --clear-sign --pinentry-mode loopback > /dev/null) && status "important" "GPG is ready to sign commits. Attempting signature..." && git commit --gpg-sign "$@"
+		(echo "" | gpg --clear-sign --pinentry-mode loopback > /dev/null) \
+			&& status "important" "GPG is ready to sign commits. Attempting signature..." \
+			&& git commit --gpg-sign "$@"
 	}
 }
 alias "git-commit"="commit"
-function status() {
-	local label label_color message message_color
-	label="${1:-error}"
-	label_color='41;37'
-	case "${1,,}" in
-		ok | okay | success | complete)
-			label_color='42;30'
-			label="${1:-SUCCESS}"
-			shift 1
-			;;
-		warn | warning | non-fatal | important)
-			label_color='43;30'
-			label="${1:-WARNING}"
-			shift 1
-			;;
-		err | error | fatal | exception | throw)
-			label_color='41;37'
-			label="${1:-ERROR}"
-			shift 1
-			;;
-		info | debug | notice | note | *)
-			label_color='46;30'
-			label="${1:-INFO}"
-			shift 1
-			;;
-	esac
-	message="$*"
-	message_color='1;3'
-	printf '\n\e[0;1;%sm %s \e[0;%sm %s\e[0m\n' "$label_color" "${label^^}" "$message_color" "${message:-An unknown error occurred.}"
-	return $?
-}
-alias __status="status"
+
+# Create a new directory and enter it
 function mkd() {
 	mkdir -p "$@"
 	cd "$@" || exit
 }
+
+# Make a temporary directory and enter it
 function tmpd() {
 	local dir
 	if [ $# -eq 0 ]; then
 		dir=$(mktemp -d)
 	else
-		dir=$(mktemp -d -t "$1.XXXXXXXXXX")
+		dir=$(mktemp -d -t "${1}.XXXXXXXXXX")
 	fi
 	cd "$dir" || exit
 }
+
+# Create a .tar.gz archive, using `zopfli`, `pigz` or `gzip` for compression
 function targz() {
 	local tmpFile="${1%/}.tar"
-	tar -cvf "$tmpFile" --exclude=".DS_Store" "$1" || return 1
+	tar -cvf "${tmpFile}" --exclude=".DS_Store" "${1}" || return 1
+
 	size=$(
-		stat -f"%z" "$tmpFile" \
-			2> /dev/null
-		stat -c"%s" "$tmpFile" 2> /dev/null
+		stat -f"%z" "${tmpFile}" 2> /dev/null # OS X `stat`
+		stat -c"%s" "${tmpFile}" 2> /dev/null # GNU `stat`
 	)
+
 	local cmd=""
 	if ((size < 52428800)) && hash zopfli 2> /dev/null; then
+		# the .tar file is smaller than 50 MB and Zopfli is available; use it
 		cmd="zopfli"
 	else
 		if hash pigz 2> /dev/null; then
@@ -143,25 +186,32 @@ function targz() {
 			cmd="gzip"
 		fi
 	fi
-	echo "Compressing .tar using \`$cmd\`…"
-	"$cmd" -v "$tmpFile" || return 1
-	[ -f "$tmpFile" ] && rm "$tmpFile"
-	echo "$tmpFile.gz created successfully."
+
+	echo "Compressing .tar using \`${cmd}\`…"
+	"${cmd}" -v "${tmpFile}" || return 1
+	[ -f "${tmpFile}" ] && rm "${tmpFile}"
+	echo "${tmpFile}.gz created successfully."
 }
+
+# Determine size of a file or total size of a directory
 function fs() {
 	if du -b /dev/null > /dev/null 2>&1; then
 		local arg=-sbhLc
 	else
 		local arg=-shLc
 	fi
-	if [[ -n "$*" ]]; then
+	# shellcheck disable=SC2199
+	if [[ -n "$@" ]]; then
 		du $arg -- "$@"
 	else
 		du $arg -- .[^.]* *
 	fi
 }
+
+# Use Git’s colored diff when available
 function gitdiff() {
 	local DIFF_OPTIONS="--color=auto --side-by-side"
+
 	if which git > /dev/null 2>&1; then
 		git diff "$DIFF_OPTIONS" --no-index --color-words "$@"
 	else
@@ -169,20 +219,26 @@ function gitdiff() {
 	fi
 }
 alias diff=gitdiff
+
+# Create a data URL from a file
 function dataurl() {
 	local nocopy mimeType charSet data
 	nocopy=0
 	mimeType="image/svg+xml"
 	charSet="utf-8"
+
 	[ "$1" = "-c" ] && {
 		nocopy=1
 		shift
 	}
-	if [[ -f $1 ]]; then
+
+	if [[ -f "$1" ]]; then
 		mimeType=$(file -b --mime-type "$1")
-	elif [[ -d $1 ]]; then
+	elif [[ -d "$1" ]]; then
 		echo "Cannot coerce a directory into a file." && return 1
 	fi
+
+	# shellcheck disable=SC2002
 	printf -v data "data:%s;%sbase64,%s" "${mimeType:-"text/plain"}" "${charSet:+"charset=$charSet;"}" "$(cat "$1" | base64 | tr -d '\n')"
 	[ -z "$data" ] && {
 		echo "Failed constructing the dataurl string."
@@ -192,21 +248,31 @@ function dataurl() {
 		echo -n "$data"
 		return 0
 	}
-	echo -n "$data" | pbcopy 2> /dev/null && echo "Created dataurl and copied to clipboard."
+	echo -n "$data" | pbcopy 2> /dev/null \
+		&& echo "Created dataurl and copied to clipboard."
 }
+
+# Start an HTTP server from a directory, optionally specifying the port
 function server() {
 	local port="${1:-8000}"
-	sleep 1 && open "http://localhost:$port/" &
+	sleep 1 && open "http://localhost:${port}/" &
+	# Set the default Content-Type to `text/plain` instead of `application/octet-stream`
+	# And serve everything as UTF-8 (although not technically correct, this doesn’t break anything for binary files)
 	python -c $'import SimpleHTTPServer;\nmap = SimpleHTTPServer.SimpleHTTPRequestHandler.extensions_map;\nmap[""] = "text/plain";\nfor key, value in map.items():\n\tmap[key] = value + ";charset=UTF-8";\nSimpleHTTPServer.test();' "$port"
 }
+
+# Compare original and gzipped file size
 function gz() {
 	local origsize gzipsize ratio
 	origsize=$(wc -c < "$1")
 	gzipsize=$(gzip -c "$1" | wc -c)
 	ratio=$(echo "$gzipsize * 100 / $origsize" | bc -l)
-	printf 'orig: %d bytes\n' "$origsize"
-	printf 'gzip: %d bytes (%2.2f%%)\n' "$gzipsize" "$ratio"
+	printf "orig: %d bytes\\n" "$origsize"
+	printf "gzip: %d bytes (%2.2f%%)\\n" "$gzipsize" "$ratio"
 }
+
+# Syntax-highlight JSON strings or files
+# Usage: `json '{"foo":42}'` or `echo '{"foo":42}' | json`
 function json() {
 	if which -s jq && ! which -s pygmentize; then
 		if [ -t 0 ]; then
@@ -215,49 +281,65 @@ function json() {
 			jq '.' -
 		fi
 	else
-		if [ -t 0 ]; then
+		if [ -t 0 ]; then # argument
 			python -mjson.tool <<< "$*" | pygmentize -l javascript
-		else
+		else # pipe
 			python -mjson.tool | pygmentize -l javascript
 		fi
 	fi
 }
+
+# Run `dig` and display the most useful info
 function digga() {
 	dig +nocmd "$1" any +multiline +noall +answer
 }
+
+# Query Wikipedia via console over DNS
 function mwiki() {
 	dig +short txt "$*".wp.dg.cx
 }
+
+# UTF-8-encode a string of Unicode symbols
 function escape() {
 	local args
 	mapfile -t args < <(printf "%s" "$*" | xxd -p -c1 -u)
-	printf '\\x%s' "${args[@]}"
+	printf "\\\\x%s" "${args[@]}"
+	# print a newline unless we’re piping the output to another program
 	if [ -t 1 ]; then
-		echo ""
+		echo "" # newline
 	fi
 }
+
+# Decode \x{ABCD}-style Unicode escape sequences
 function unidecode() {
 	perl -e "binmode(STDOUT, ':utf8'); print \"$*\""
+	# print a newline unless we’re piping the output to another program
 	if [ -t 1 ]; then
-		echo ""
+		echo "" # newline
 	fi
 }
+
+# Get a character’s Unicode code point
 function codepoint() {
 	perl -e "use utf8; print sprintf('U+%04X', ord(\"$*\"))"
+	# print a newline unless we’re piping the output to another program
 	if [ -t 1 ]; then
-		echo ""
+		echo "" # newline
 	fi
 }
+
+# `v` with no arguments opens the current directory in Vim, otherwise opens the
+# given location
 function v() {
 	if [ $# -eq 0 ]; then
-		vim .
+		$(which nvim 2>/dev/null || which vim) .
 	else
-		vim "$@"
+		$(which nvim 2>/dev/null || which vim) "$@"
 	fi
 }
-if [[ "$(uname -s)" == "Linux" ]]; then
-	alias open="xdg-open"
-fi
+
+# `o` with no arguments opens the current directory, otherwise opens the given
+# location
 function o() {
 	if (($# > 0)); then
 		open "@" > /dev/null 2>&1
@@ -265,66 +347,100 @@ function o() {
 		open . > /dev/null 2>&1
 	fi
 }
-function l() {
+
+# `l` integrates file-detection with `ls`. If you use `l` on a file rather than a folder, its automatically opened with its respective editor.
+function l () {
 	local path cmd
 	path=.
 	cmd=less
+
 	if (($# > 0)); then
-		if [[ $1 =~ ^[-]{0,2}((vs)?c(ode)?|vs?)$ ]]; then
-			cmd='code'
-			shift 1
-		elif [[ $1 =~ ^[-]{0,2}(p(rint)?|cat)$ ]]; then
-			cmd='cat'
-			shift 1
-		elif [[ $1 =~ ^[-]{0,2}(less|more|nvim|vim)$ ]]; then
-			cmd=${BASH_REMATCH[1]:-less}
-			shift 1
-		elif [[ $1 =~ ^[-]{0,2}(o(pen)?)$ ]]; then
-			cmd='open'
-			shift 1
+		if [[ "$1" =~ ^[-]{0,2}((vs)?c(ode)?|vs?)$ ]]; then
+			cmd=code; shift 1;
+		elif [[ "$1" =~ ^[-]{0,2}(p(rint)?|cat)$ ]]; then
+			cmd=cat; shift 1;
+		elif [[ "$1" =~ ^[-]{0,2}(less|more|nvim|vim)$ ]]; then
+			cmd=${BASH_REMATCH[1]:-less}; shift 1;
+		elif [[ "$1" =~ ^[-]{0,2}(o(pen)?)$ ]]; then
+			cmd=open; shift 1;
 		fi
-		[ -e "$1" ] && {
-			path="${1-}"
-			shift 1
-		}
+		[ -e "$1" ] && { path="${1-}"; shift 1; };
 	fi
 	if [ -d "${path:-.}" ]; then
-		command ls -FAgoHhksG "$@" "${path:-.}"
+		if type -t ll >&/dev/null; then
+						ll "$@" "${path:-.}"
+		else
+						command ls -FAgoHhksG "$@" "${path:-.}"
+		fi
 	elif [ -r "${path-}" ] && [ -f "${path-}" ]; then
-		${cmd:-less} "$@" "${path:-.}"
+					${cmd:-less} "$@" "${path:-.}"
 	fi
 }
+
+# `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
+# the `.git` directory, listing directories first. The output gets piped into
+# `less` with options to preserve color and line numbers, unless the output is
+# small enough for one screen.
 function tre() {
 	tree -aC -I '.git' --dirsfirst "$@" | less -FRNX
 }
+
+# Call from a local repo to open the repository on github/bitbucket in browser
+# Modified version of https://github.com/zeke/ghwd
 function gitrepo() {
+	# Figure out github repo base URL
 	local base_url
 	base_url=$(git config --get remote.origin.url)
-	base_url=${base_url%\.git}
+	base_url=${base_url%\.git} # remove .git from end of string
+
+	# Fix git@github.com: URLs
 	base_url=${base_url//git@github\.com:/https:\/\/github\.com\/}
+
+	# Fix git://github.com URLS
 	base_url=${base_url//git:\/\/github\.com/https:\/\/github\.com\/}
+
+	# Fix git@bitbucket.org: URLs
 	base_url=${base_url//git@bitbucket.org:/https:\/\/bitbucket\.org\/}
+
+	# Fix git@gitlab.com: URLs
 	base_url=${base_url//git@gitlab\.com:/https:\/\/gitlab\.com\/}
+
+	# Validate that this folder is a git folder
 	if ! git branch 2> /dev/null 1>&2; then
 		echo "Not a git repo!"
 		exit $?
 	fi
+
+	# Find current directory relative to .git parent
 	full_path=$(pwd)
 	git_base_path=$(
 		cd "./$(git rev-parse --show-cdup)" || exit 1
 		pwd
 	)
-	relative_path="${full_path#"$git_base_path"}"
+	relative_path="${full_path#"$git_base_path"}" # remove leading git_base_path from working directory
+
+	# If filename argument is present, append it
 	if [ -n "$1" ]; then
 		relative_path="$relative_path/$1"
 	fi
+
+	# Figure out current git branch
+	# git_where=$(command git symbolic-ref -q HEAD || command git name-rev --name-only --no-undefined --always HEAD) 2>/dev/null
 	git_where=$(command git name-rev --name-only --no-undefined --always HEAD) 2> /dev/null
+
+	# Remove cruft from branchname
 	branch="${git_where#refs\/heads\/}"
+
 	[[ $base_url == *bitbucket* ]] && tree="src" || tree="tree"
 	url="$base_url/$tree/$branch$relative_path"
+
 	echo "Calling $(type open) for $url"
+
 	open "$url" &> /dev/null || (echo "Using $(type open) to open URL failed." && exit 1)
 }
+#alias repo=gitrepo;
+
+# Get colors in manual pages
 function __mancolors() {
 	env \
 		LESS_TERMCAP_mb="$(printf '\e[1;31m')" \
@@ -337,6 +453,7 @@ function __mancolors() {
 		man "$@"
 }
 alias man=__mancolors
+
 function __lesscolors() {
 	env \
 		LESS_TERMCAP_mb="$(printf '\e[1;31m')" \
@@ -349,6 +466,7 @@ function __lesscolors() {
 		less "$@"
 }
 alias less=__lesscolors
+
 function __morecolors() {
 	env \
 		LESS_TERMCAP_mb="$(printf '\e[1;31m')" \
@@ -358,19 +476,27 @@ function __morecolors() {
 		LESS_TERMCAP_so="$(printf '\e[1;44;33m')" \
 		LESS_TERMCAP_ue="$(printf '\e[0m')" \
 		LESS_TERMCAP_us="$(printf '\e[1;32m')" \
-		more --use-color "$@"
+	more --use-color "$@"
 }
 alias more=__morecolors
+
+########
+## functions used in .path to amend the $PATH variable
+########
 function get_var() {
 	eval 'printf "%s\n" "${'"$1"'}"'
 }
+
 function set_var() {
 	eval "$1=\"\$2\""
 }
+
 function dedupe_path() {
 	local pathvar_value deduped_path
 	pathvar_value="${1:-$PATH}"
 	deduped_path="$(perl -e 'print join(":",grep { not $seen{$_}++ } split(/:/, $ARGV[0]))' "$pathvar_value")"
+	# set_var "$pathvar_name" "$deduped_path"
 	echo -n "$deduped_path" && return 0
-	return 1
+	return 1 # still error? errrrrr
 }
+

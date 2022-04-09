@@ -1,12 +1,29 @@
 #!/usr/bin/env bash
 
 OSYS="$(uname | tr '[:upper:]' '[:lower:]')";
-[ "$OSYS" = "darwin" ] && IS_DARWIN=1;
+[ "$OSYS" = "darwin" ] && export IS_DARWIN=1;
 [ -z "$CI" ] && verbosity="--quiet" || verbosity="--verbose";
-[ -z "$TERM" ] && TERM=xterm;
+[ -z "$TERM" ] && export TERM=xterm;
 
 function curdir () {
 	echo -n "$(readlink $(test -z "$CI" && echo -n "-f" || echo -n "-n") "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null || echo -n "$(cd "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)")";
+}
+
+function mkln () {
+	local v f=1
+	[ -n "$CI" ] && v="-v" || v="";
+	[ "$1" = "-f" ] && f=1 && shift;
+	[ "$1" = "-i" ] && unset f;
+
+	dir="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
+	base="$(basename -- "$FILE")"
+	[ -d "$dir" ] || mkdir -p "$dir" > /dev/null 2>&1
+
+	ln ${f:+"-fn "}${v:+"-v "}"$@" 2>&1; return $?
+}
+
+function symlink () {
+	hardln -s "$@"; return $?
 }
 
 # setup our new homedir with symlinks to all the dotfiles
@@ -19,7 +36,7 @@ function setup_home() {
 	for FILE in $(find -type f -name ".*" -not -name ".git*" -not -name ".*swp" "${DIR:+$DIR}"); do
 		# local d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		local b="$(basename -- "$FILE")"
-		ln -sfn "$FILE" "$HOME/$b"
+		symlink "$FILE" "$HOME/$b"
 	done
 
 	# .gitconfig.d
@@ -27,18 +44,18 @@ function setup_home() {
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
-		ln -sfn "$FILE" "$d/$b"
+		ln -fn "$FILE" "$d/$b"
 	done
 
-	ln -f "$DIR/.gitconfig" "$HOME/.gitconfig"
-	ln -f "$DIR/.gitignore" "$HOME/.gitignore"
+	ln -fnv "$DIR/.gitconfig" "$HOME/.gitconfig"
+	ln -fnv "$DIR/.gitignore" "$HOME/.gitignore"
 
 	# GNUPG
 	for FILE in $(find -type f -name "*.conf" "${DIR:+"$DIR/"}.gnupg"); do
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
-		ln -sfn "$FILE" "$d/$b"
+		ln -fnv "$FILE" "$d/$b"
 	done
 }
 

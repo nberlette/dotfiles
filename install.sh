@@ -15,25 +15,25 @@ function setup_home() {
 	DIR="$(curdir)"
 
 	# bash env, etc.
-	for FILE in $(find -type f -name ".*" -not -name ".git*" -not -name ".*swp" "${DIR:+$DIR}"); do
+	for FILE in $(find "${DIR:+$DIR}" -type f -name ".*" -not -name ".git*" -not -name ".*swp"); do
 		# local d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		local b="$(basename -- "$FILE")"
 		ln -fn -v "$FILE" "$HOME/$b"
 	done
 
 	# .gitconfig.d
-	for FILE in $(find -type f -name "*" -not -name "*.swp" -not -name ".*" "${DIR:+"$DIR/"}.gitconfig.d"); do
+	for FILE in $(find "${DIR:+"$DIR/"}.gitconfig.d" -type f -name "*" -not -name "*.swp" -not -name ".*"); do
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
 		ln -fn -v "$FILE" "$d/$b"
 	done
 
-	ln -fn -v "$DIR/.gitconfig" "$HOME/.gitconfig"
-	ln -fn -v "$DIR/.gitignore" "$HOME/.gitignore"
+	ln -fn -v "$DIR/gitconfig" "$HOME/.gitconfig"
+	ln -fn -v "$DIR/gitignore" "$HOME/.gitignore"
 
 	# GNUPG
-	for FILE in $(find -type f -name "*.conf" "${DIR:+"$DIR/"}.gnupg"); do
+	for FILE in $(find "${DIR:+"$DIR/"}.gnupg" -type f -name "*.conf"); do
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1
@@ -41,7 +41,7 @@ function setup_home() {
 	done
 
   # github cli
-	for FILE in $(find -type f -name "*.yml" "${DIR:+"$DIR/"}.config/gh"); do
+	for FILE in $(find "${DIR:+"$DIR/"}.config/gh" -type f -name "*.yml" ); do
 		d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
 		b="$(basename -- "$FILE")"
 		mkdir -p "$d" > /dev/null 2>&1

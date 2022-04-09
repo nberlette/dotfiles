@@ -8,6 +8,22 @@ xcuserdata
 Pods
 keyrace-mac.xcworkspace/
 
+# sublime-workspace
+# code-workspace
+# etc
+*.sublime-project
+*.*workspace
+
+
+# dotenv
+.env
+.env.*
+.env.me
+!.env.project
+!.env.example
+!.env.sample
+
+
 # Icon must end with two \r
 Icon
 
@@ -85,7 +101,6 @@ tags
 # Executables
 *.exe
 *.out
-*.app
 *.i*86
 *.x86_64
 *.hex
@@ -129,7 +144,6 @@ tags
 # Executables
 *.exe
 *.out
-*.app
 
 ##
 # Go
@@ -155,7 +169,6 @@ _cgo_export.*
 
 _testmain.go
 
-*.exe
 *.test
 *.prof
 
@@ -180,11 +193,9 @@ Session.vim
 *~
 
 .uuid
-
-.extra
 .gitconfig
 .gnupg
-!.gnupg/gpg*.conf
+!.gnupg/*.conf
 .i3/logfile
 .irssi/away.log
 .irssi/config*
@@ -195,7 +206,6 @@ Session.vim
 .irssi/startup
 .rainbow_oauth
 .nginx/conf.d/*
-
 logs
 *.log
 .*.log
@@ -243,3 +253,5 @@ typings/
 .tern-port
 .npmrc
 node_modules
+.svelte-kit
+!.svelte-kit/tsconfig.json

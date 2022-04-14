@@ -123,10 +123,16 @@ Session.vim
 .uuid
 
 .gitconfig
-.gnupg
+.gnupg/*
+.gnupg/*.kbx
 !.gnupg/gpg.conf
 !.gnupg/gpg-agent.conf
 !.gnupg/scdaemon.conf
+.gnupg/tofu.db
+.gnupg/trustdb.gpg
+.gnupg/private-keys-v1.d
+.gnupg/openpgp-revocs.d
+.gnupg/.*
 
 .i3/logfile
 .irssi/away.log

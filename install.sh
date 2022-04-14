@@ -66,6 +66,7 @@ function setup_brew() {
   # also skip this step if we're in CI/CD (github actions), because reasons.
   if [ -z "$CI" ]; then
     if [ -n "$SUPERVISOR_DOTFILE_REPO" ] || [ -n "$IS_DARWIN" ]; then
+      which rvm >&/dev/null || command curl -fsSL https://get.rvm.io | bash -s stable --rails;
       # install some essentials
       brew install "${verbosity-}" --overwrite \
         gcc \

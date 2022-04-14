@@ -1,6 +1,4 @@
-##
-# OS X
-##
+Thumbs.db
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -8,14 +6,9 @@ xcuserdata
 Pods
 keyrace-mac.xcworkspace/
 
-# sublime-workspace
-# code-workspace
-# etc
 *.sublime-project
 *.*workspace
 
-
-# dotenv
 .env
 .env.*
 .env.me
@@ -31,7 +24,6 @@ Icon
 # Thumbnails
 ._*
 
-# Files that might appear in the root of a volume
 .DocumentRevisions-V100
 .fseventsd
 .Spotlight-V100
@@ -39,121 +31,66 @@ Icon
 .Trashes
 .VolumeIcon.icns
 
-# Directories potentially created on remote AFP share
 .AppleDB
 .AppleDesktop
 Network Trash Folder
 Temporary Items
 .apdisk
-
-##
-# Linux
-##
 *~
 
-# temporary files which can be created if a process still has a handle open of a deleted file
 .fuse_hidden*
-
-# KDE directory preferences
 .directory
-
-# Linux trash folder which might appear on any partition or disk
 .Trash-*<Paste>
 
-##
-# Vim
-##
-# swap
 [._]*.sw[a-z]
 [._]sw[a-z]
-# session
 Session.vim
-# temporary
 .netrwhist
 *~
-# auto-generated tag files
 tags
 
-##
-# C
-##
-# Object files
 *.o
 *.ko
 *.elf
-
-# Precompiled Headers
 *.gch
 *.pch
-
-# Libraries
 *.lib
 *.a
 *.la
 *.lo
-
-# Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
-
-# Executables
 *.exe
 *.out
 *.i*86
 *.x86_64
 *.hex
-
-# Debug files
 *.dSYM/
-
-# depends/gen
 *.gen.c
 *.pic.d
 *.pie.d
 *.o.depends
-
-##
-# C++
-##
-# Compiled Object files
 *.slo
 *.lo
 *.o
 *.obj
-
-# Precompiled Headers
 *.gch
 *.pch
-
-# Compiled Dynamic libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
 *.mod
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
-
-# Executables
 *.exe
 *.out
-
-##
-# Go
-##
-# Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
 *.a
 *.so
-
-# Folders
 _obj
 _test
 
@@ -166,23 +103,15 @@ _test
 _cgo_defun.c
 _cgo_gotypes.go
 _cgo_export.*
-
 _testmain.go
 
 *.test
 *.prof
-
-# python virtual env
 .venv
-
-# linux kernel debs
 linux-*.deb
 *~
 
-# KDE directory preferences
 .directory
-
-# Linux trash folder which might appear on any partition or disk
 .Trash-*
 
 [._]*.s[a-w][a-z]
@@ -191,11 +120,14 @@ linux-*.deb
 Session.vim
 .netrwhist
 *~
-
 .uuid
+
 .gitconfig
 .gnupg
-!.gnupg/*.conf
+!.gnupg/gpg.conf
+!.gnupg/gpg-agent.conf
+!.gnupg/scdaemon.conf
+
 .i3/logfile
 .irssi/away.log
 .irssi/config*
@@ -206,7 +138,9 @@ Session.vim
 .irssi/startup
 .rainbow_oauth
 .nginx/conf.d/*
+
 logs
+.logs
 *.log
 .*.log
 npm-debug.log*
@@ -224,12 +158,8 @@ coverage
 *.lcov
 .nyc_output
 .grunt
-bower_components
 .lock-wscript
-build/Release
-node_modules/
-jspm_packages/
-typings/
+
 *.tsbuildinfo
 .npm
 .eslintcache
@@ -240,8 +170,7 @@ typings/
 .node_repl_history
 *.tgz
 .yarn-integrity
-.env
-.env.test
+
 .cache
 .next
 .nuxt
@@ -250,8 +179,15 @@ typings/
 .serverless/
 .fusebox/
 .dynamodb/
+.svelte-kit
+!.svelte-kit/tsconfig.json
+.vercel_build_output
+
 .tern-port
 .npmrc
 node_modules
-.svelte-kit
-!.svelte-kit/tsconfig.json
+bower_components
+build/Release
+node_modules/**/*
+jspm_packages/
+typings/

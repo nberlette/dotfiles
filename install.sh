@@ -120,9 +120,10 @@ function setup_brew() {
 }
 
 function global_add() {
-  local pkg pkgs
+  local pkg pkgs agent
+  agent=$(which pnpm 2>/dev/null || which npm 2>/dev/null)
   pkgs=("$@")
-  pnpm add -g "$@" >&/dev/null && {
+  "$agent" add -g "$@" >&/dev/null && {
     echo "Successfully installed $# global packages!"
     for pkg in "${pkgs[@]}"; do
       echo "  - $pkg"

@@ -1,4 +1,4 @@
-# <img src="https://cdn.berlette.com/svg/dotfiles.svg" alt="" height="44" align="left"> `dotfiles`
+# <img src="https://cdn.berlette.com/svg/dotfiles.svg" alt="." height="44" align="left"> `dotfiles`
 
 Some personal preferences for my dev workspaces on Gitpod.io (and local macOS machines).
 
@@ -57,7 +57,6 @@ Have fun!
 If you have any ideas or find a bug, please submit a PR - contributions are welcome!!
 
 ---
-
 
 MIT © [Nicholas Berlette](https://github.com/nberlette). Overly inspired by [`jessfraz/dotfiles`](https://github.com/jessfraz/dotfiles). Thanks Jess!
 

@@ -25,6 +25,8 @@ for __ga in "convert-keyring" "dirmngr" "dirmngr-client" "gpg" "gpg2" "gpg-agent
 	if [ -x "/usr/local/bin/${__ga-}" ]; then
 		# shellcheck disable=SC2139
 		alias "${__ga-}"="/usr/local/bin/${__ga-}"
+	elif [ -x "/opt/homebrew/bin/${__ga-}" ]; then
+		alias "${__ga-}"="/opt/homebrew/bin/${__ga-}"
 	fi
 done
 unset -v __ga
@@ -72,7 +74,7 @@ alias ls="command ls ${colorflag}"
 # List all files colorized in long format
 # shellcheck disable=SC2139
 
-alias ll="command ls -FAHlosh -% ${colorflag-} ${dateflag}"
+alias ll="command ls -FAHlosh ${colorflag-}"
 
 # List all files colorized in long format, including dot files
 # shellcheck disable=SC2139

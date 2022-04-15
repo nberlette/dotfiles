@@ -13,7 +13,7 @@ function src() {
 		fi
 	done
 }
-# srx: "sourcexports", basically a knock-off of dotenv
+# srx: basically a knock-off of dotenv
 function srx() {
 	local file
 	for file in "$@"; do
@@ -31,10 +31,13 @@ function dedupe() {
 	SEP="${2:-":"}"
 	echo -n "$(perl -e 'print join("'"${SEP:-":"}"'",grep { not $seen{$_}++ } split(/'"${SEP:-":"}"'/, $ARGV[0]))' "$OLD")"
 }
+# alias dedupe_path=dedupe
 
 if [ -z "$PATH" ]; then
 	export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/sbin"
 fi
+
+homebrew_prefix="${HOMEBREW_PREFIX:-"$(brew --prefix)"}"
 
 # go
 export GOPATH="$HOME/.go"
@@ -57,10 +60,10 @@ export BOOST_INCLUDE_DIR="${HOMEBREW_PREFIX-}/include"
 # src /etc/bash_completion /etc/bash_completion.d
 
 # github cli completions
-command -v gh >&/dev/null && eval "$(gh completion -s bash 2> /dev/null)"
+eval "$(gh completion -s bash 2> /dev/null)"
 
 # supabase cli completions
-command -v supabase >&/dev/null && eval "$(supabase completion bash 2> /dev/null)"
+eval "$(supabase completion bash 2>/dev/null)"
 
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
 # platform-specific stuff
@@ -70,9 +73,8 @@ case "$os" in
 		# shellcheck source=/dev/null
 		src /home/linuxbrew/.linuxbrew/etc/bash_completion.d 2> /dev/null
 
-		if which lesspipe >&/dev/null; then
-			eval "$(SHELL="$(which bash)" lesspipe)"
-		fi
+    which lesspipe >&/dev/null && eval "$(SHELL="$(which bash)" lesspipe)";
+
 		if which dircolors >&/dev/null; then
 			[ -r ~/.dircolors ] && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 		fi
@@ -115,14 +117,14 @@ case "$os" in
 		fi
 
 		# iTerm.app
-		if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-			case "$(basename -- "$SHELL")" in
-				"bash")
+		if [[ "$os" == "darwin" && "$TERM_PROGRAM" == "iTerm.app" ]]; then
+			case "$SHELL" in
+				(*bash)
 					# shellcheck source=/dev/null
 					[ -f "$HOME/.iterm2_shell_integration.bash" ] \
 						&& source "$HOME/.iterm2_shell_integration.bash" 2> /dev/null
 					;;
-				"zsh")
+				(*zsh)
 					# shellcheck source=/dev/null
 					[ -f "$HOME/.iterm2_shell_integration.zsh" ] \
 						&& source "$HOME/.iterm2_shell_integration.zsh" 2> /dev/null
@@ -144,8 +146,6 @@ case "$os" in
 		export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
 		export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
 		export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
-
-		[ -d "$HOME/Library/pnpm" ] && export PATH="$HOME/Library/pnpm:$PATH"
 		;;
 esac
 
@@ -155,8 +155,15 @@ export PATH="$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 [ -d "$HOME/.local/share/pnpm" ] \
 	&& export PATH="$HOME/.local/share/pnpm:$PATH"
 
+[ -d "$HOME/Library/pnpm" ] && export PATH="$HOME/Library/pnpm:$PATH"
+
 # housekeeping
-if type -t dedupe >&/dev/null; then
-	PATH="$(dedupe "$PATH" ":")"
-	export PATH
-fi
+function clean_path () {
+  if type -t dedupe >&/dev/null; then
+    PATH="$(dedupe "$PATH" ":")"
+  fi
+  PATH="${PATH//"::"/}" # remove any double-colons from missing path variables
+  PATH="${PATH#:}" # remove any trailing colon
+  PATH="${PATH%:}" # remove any preceding colon
+	export PATH # do what it 'posed to
+}

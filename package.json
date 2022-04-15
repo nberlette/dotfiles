@@ -1,6 +1,6 @@
 {
   "name": "dotfiles",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "author": "Nicholas Berlette <nick@berlette.com>",
   "description": "Dotfiles configuration for Gitpod and local development",
@@ -14,9 +14,9 @@
     "podfiles",
     "config"
   ],
-  "prettier": "@brlt/prettier/bash",
+  "prettier": "@brlt/prettier",
   "main": "./install.sh",
-  "packageManager": "pnpm@6.32.4",
+  "packageManager": "pnpm@6.32.6",
   "publishConfig": {
     "access": "public"
   },
@@ -24,8 +24,9 @@
     "build": "./install.sh",
     "test": "pnpm lint && pnpm check",
     "check": "shellcheck --color=always --shell=bash -x .{path,functions,bash*,exports}",
-    "lint": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --prettier-plugin-sh --check \"**/*\" \"**/.*\"",
-    "format": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --plugin prettier-plugin-sh --write \"**/*\" \"**/.*\""
+    "lint": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -w -s ",
+    "format:check": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --prettier-plugin-sh --check \"**/*\" \"**/.*\"",
+    "format:fix": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --plugin prettier-plugin-sh --write \"**/*\" \"**/.*\""
   },
   "devDependencies": {
     "@antfu/ni": "^0.13.2",

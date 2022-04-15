@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
-OSYS="$(uname | tr '[:upper:]' '[:lower:]')"
-[ "$OSYS" = "darwin" ] && export IS_DARWIN=1
-[ -z "$CI" ] && verbosity="--quiet" || verbosity="--verbose"
-[ -z "$TERM" ] && export TERM=xterm
+verbosity="--quiet"
+OSYS=$(uname | tr '[:upper:]' '[:lower:]')
+IS_DARWIN=$(test "$OSYS" = "darwin" && echo -n 1 || echo -n 0)
+
+if [ -n "$CI" ]; then
+  verbosity="--verbose"
+  term=${TERM:-xterm}
+  TERM="$term"
+  export TERM
+fi
 
 STEP_NUM=1
 STEP_TOTAL=3
@@ -54,7 +60,6 @@ function setup_home() {
 
 # install homebrew (if needed) and some commonly-used global packages. the bare minimum.
 function setup_brew() {
-  print_banner step $'Installing/upgrading \033[1;4;35mhomebrew\033[0;1m and required formulae...'
   # install homebrew if not already installed
   if ! which brew >&/dev/null; then
     curl -fsSL https://raw.github.com/Homebrew/install/HEAD/install.sh | bash -
@@ -69,9 +74,7 @@ function setup_brew() {
   # otherwise this step takes > 120 seconds and fails to install.
   # also skip this step if we're in CI/CD (github actions), because reasons.
   if [ -z "$CI" ]; then
-    if [ -n "$SUPERVISOR_DOTFILE_REPO" ] || [ -n "$IS_DARWIN" ]; then
-      which rvm >&/dev/null || command curl -fsSL https://get.rvm.io | bash -s stable --rails;
-
+    if [ -n "$SUPERVISOR_DOTFILE_REPO" ] || [ $IS_DARWIN = 1 ]; then
       # install some essentials
       brew install "${verbosity-}" --overwrite \
         gcc \
@@ -99,7 +102,9 @@ function setup_brew() {
       fi
 
       # for macOS
-      if [ -n "$IS_DARWIN" ]; then
+      if [ $IS_DARWIN = 1 ]; then
+        which rvm >&/dev/null || command curl -fsSL https://get.rvm.io | bash -s stable --rails;
+
         brew tap jeroenknoops/tap
         brew install "${verbosity-}" \
           gcc coreutils gitin gpg gpg-suite pinentry-mac python3
@@ -115,9 +120,9 @@ function setup_brew() {
           graphql-playground prisma-studio private-internet-access qlmarkdown \
           visual-studio-code visual-studio-code-insiders \
           google-chrome google-chrome-canary firefox firefox-nightly
-
       else
-        brew install --overwrite gnupg gnupg2 xclip
+        brew install --overwrite gnupg2 xclip
+
       fi
     fi
   fi
@@ -192,7 +197,7 @@ function main() {
       # display the completed step number and total number of steps
       echo -e '\n\033[1;4m Completed step '$STEP_NUM' of '$STEP_TOTAL'.\033[0m\n\n'
       # increment step number by 1
-      ((step++))
+      ((STEP_NUM++))
       # pause and clear again before proceeding to next step
       sleep "${delay:-3}s" && clear
     fi

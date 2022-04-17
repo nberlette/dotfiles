@@ -121,7 +121,6 @@ function setup_brew() {
         brew install --quiet --overwrite gnupg2 xclip &>> "$DOTFILES_LOG"
       fi
     fi
-  fi
 }
 
 function global_add() {

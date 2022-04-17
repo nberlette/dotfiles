@@ -3,7 +3,7 @@ lockfileVersion: 5.3
 specifiers:
   '@antfu/ni': ^0.13.2
   '@brlt/prettier': ^1.6.4
-  pnpm: ^6.32.4
+  pnpm: ^6.32.7
   prettier: ^2.6.1
   prettier-plugin-sh: ^0.8.1
   shellcheck: ^1.1.0
@@ -11,7 +11,7 @@ specifiers:
 devDependencies:
   '@antfu/ni': 0.13.2
   '@brlt/prettier': 1.6.4
-  pnpm: 6.32.4
+  pnpm: 6.32.8
   prettier: 2.6.1
   prettier-plugin-sh: 0.8.1_prettier@2.6.1
   shellcheck: 1.1.0
@@ -97,8 +97,8 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /pnpm/6.32.4:
-    resolution: {integrity: sha512-rOG+VpOzs6g/MR5HWc8KTlLAx3ljdRJCMQwSg1DE/hzAaqF/Y2zIHH0u6dZw/XnRb9w1U8rOs9MJT9jMt7e+Qw==}
+  /pnpm/6.32.8:
+    resolution: {integrity: sha512-pZroJtqqZDevFpJI/PsOMLLfGeA6en6cvyI/HC7boGmT7TJy9eFInNYwMGW2enKv2Al/aamV2Zomv05TtBe7qw==}
     engines: {node: '>=12.17'}
     hasBin: true
     dev: true

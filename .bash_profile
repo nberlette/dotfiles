@@ -9,10 +9,10 @@ export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 srx ~/.{env,extra}
 
 # include our core bash environment
-src ~/.{exports,functions,bash_aliases,profile}
+src ~/.{exports,functions,bash_aliases}
 
-# ruby version manager
-src ~/.rvm/scripts/rvm
+# ruby version manager, cargo (rust), nix
+src ~/.rvm/scripts/rvm ~/.cargo/env ~/.nix-profile/etc/profile.d/nix.sh
 
 # TODO: move this to an install script so it's always ready on runtime
 function get_var() {
@@ -35,7 +35,8 @@ function get_json() {
   local path file
   file="${1:-"/workspace/.vscode-remote/settings.json"}"
   path="${2:-git.enableCommitSigning}"
-  jq '.["'$path'"]' "$file" 2>/dev/null || return $?
+  # quotemageddon
+  jq '.["'"$path"'"]' "$file" 2>/dev/null || return $?
 }
 
 function set_json() {
@@ -43,11 +44,16 @@ function set_json() {
   file="${1:-"/workspace/.vscode-remote/settings.json"}"
   path="${2:-git.enableCommitSigning}"
   value="${3:-true}"
-  jq '.["'$path'"]=$value | .' "$file" 2>/dev/null || return $?
+  # holy freakin quotes batman
+  jq '.["'"$path"'"]=$value | .' "$file" 2>/dev/null || return $?
 }
 
 function __gpg_gitconfig () {
-  [ -n "${GPG_KEY_ID-}" ] && git config --global user.signingkey "${GPG_KEY_ID-}"
+  [ -z "$(git config --global user.name)" ] && {
+    git config --global user.name "$GIT_COMMITTER_NAME";
+    git config --global user.email "$GIT_COMMITTER_EMAIL";
+  }
+  git config --global user.signingkey "${GPG_KEY_ID:-$GIT_COMMITTER_EMAIL}";
   git config --global commit.gpgsign "true"
   git config --global tag.gpgsign "true"
 }
@@ -63,7 +69,7 @@ function __gpg_vscode () {
   fi
 }
 
-function __gpg_unlock () {
+function gpgsetup () {
   local PINENTRY_CONF GPG_CONF
   PINENTRY_CONF='pinentry-mode loopback'
   GPG_CONF="$HOME/.gnupg/gpg.conf"
@@ -72,31 +78,19 @@ function __gpg_unlock () {
   if ! grep -q "$PINENTRY_CONF" "$GPG_CONF" >/dev/null 2>&1; then
     echo "$PINENTRY_CONF" >>"$GPG_CONF"
   fi
+
   gpg --batch --import <(echo "${GPG_KEY-}" | base64 -d) >&/dev/null
 
-  __gpg_gitconfig
-  __gpg_vscode
+  __gpg_gitconfig 2>/dev/null
+  __gpg_vscode 2>/dev/null
 
   gpgconf --kill gpg-agent
-  gpg-connect-agent reloadagent /bye >&/dev/null
+  gpg-connect-agent reloadagent /bye &>/dev/null
   export GPG_CONFIGURED=1
 }
 
 export GPG_TTY=$(tty)
-[ -n "${GPG_KEY-}" ] && __gpg_unlock 2>/dev/null
+[ -n "${GPG_KEY-}" ] && gpgsetup 2>/dev/null
 
 # starship shell prompt with fallback
-__prompt () {
-  if ! which starship >&/dev/null; then
-    # its horribly hacky, but I'm short on time and it works for now. (I hope)
-    brew install starship --quiet && __prompt 2>/dev/null;
-  fi
-
-  eval "$(starship completions bash 2>/dev/null)"
-  eval "$(starship init bash 2>/dev/null)"
-};
-# instantiate and cleanup afterwards
-__prompt && unset -f __prompt || {
-  PROMPT_COMMAND+=' __git_ps1 "[\$?] '"${GIT_PS1_PREFIX-}"'" "'"${GIT_PS1_SUFFIX-}"'" "'"${GIT_PS1_FORMAT:- %s }"'"'
-  export PROMPT_COMMAND
-};
+eval "$(starship init bash)"

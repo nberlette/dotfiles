@@ -208,13 +208,16 @@ function main() {
 
   # link the dotfiles to $HOME
   setup_home && print_step_complete
+
   # setup node and pnpm
   setup_node latest && print_step_complete
+
   # setup homebrew
   setup_brew && print_step_complete
-  # rewrite .bashrc on gitpod setups only
+
+  # rewrite .bashrc on gitpod setups
   if [ -n "$GITPOD_WORKSPACE_ID" ]; then
-    rm -f ~/.bashrc && command mv ~/.bash_profile ~/.bashrc;
+    command mv -f ~/.bash_profile ~/.bashrc >> "$DOTFILES_LOG" 2>&1
     git config --global user.name "$GIT_COMMITTER_NAME"
     git config --global user.email "$GIT_COMMITTER_EMAIL"
     git config --global user.signingkey "${GPG_KEY_ID:-$GIT_COMMITTER_EMAIL}"

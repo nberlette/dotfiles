@@ -98,7 +98,7 @@ function gpg_init() {
 }
 
 export GPG_TTY=$(tty)
-[ -n "${GPG_KEY-}" ] && gpgsetup 2>/dev/null
+[ -n "${GPG_KEY-}" ] && [ -z "$GPG_CONFIGURED" ] && gpgsetup 2>/dev/null
 
 # starship shell prompt with fallback
 eval "$(starship init bash)"

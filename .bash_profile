@@ -89,6 +89,14 @@ function gpgsetup () {
   export GPG_CONFIGURED=1
 }
 
+# super hacky "fix" (bandaid on a bullethole tbh) for gpg failure to initialize
+function gpg_init() {
+  gpgsetup 2>/dev/null
+  (echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null)\
+    && printf '\033[1;32m %s\033[0m\n' '🔓 unlocked GPG key and ready to sign!' \
+    || printf '\033[1;31m %s\033[0m\n' '🔒 could not unlock GPG key. bad passphrase?';
+}
+
 export GPG_TTY=$(tty)
 [ -n "${GPG_KEY-}" ] && gpgsetup 2>/dev/null
 

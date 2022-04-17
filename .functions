@@ -178,10 +178,6 @@ function __status() {
 alias __print_msg="__status"
 alias status="__status"
 
-# super hacky "fix" (bandaid on a bullethole tbh) for gpg failure to initialize
-alias gpg_unlock='echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null'
-alias gpg_init='gpg_unlock >/dev/null && __status "ok" "GPG is ready to sign commits and tags" '
-
 
 function resolve () {
   local verbose

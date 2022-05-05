@@ -12,6 +12,9 @@ if [ -n "$CI" ]; then
   verbosity="--verbose"
 fi
 
+# ask for password right away
+sudo -v
+
 function curdir() {
   echo -n "$(readlink "$(test -z "$CI" && echo -n "-f" || echo -n "-n")" "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null || echo -n "$(cd "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)")"
 }
@@ -38,7 +41,7 @@ function setup_home() {
   print_banner step $'Linking \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
 
   # .bashrc.d
-  link_dir ".bashrc.d" ".*"
+  link_dir ".bashrc.d" "*"
 
   link_dir ".bin" "*"
 
@@ -79,7 +82,7 @@ function setup_brew() {
     # execute now just to be sure its available for us immediately
     eval "$(brew shellenv 2>/dev/null)"
 
-    brew install "${verbosity-}" --overwrite coreutils starship gh shfmt;
+    brew reinstall "${verbosity-}" --overwrite coreutils starship gh shfmt;
   } >> "$DOTFILES_LOG" 2>&1
 
   # don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)
@@ -141,11 +144,12 @@ function setup_brew() {
 
 function global_add() {
   local pkg pkgs=("$@")
-  for pkg in "${pkgs[@]}"; do
-    pnpm add -g "$pkg" &>/dev/null \
-      && echo -e "\\033[1;32m ✓ $pkg \\033[0m" \
-      || echo -e "\\033[1;48;2;230;30;30m 𐄂 ${pkg-}\\033[0m";
-  done
+  pnpm add -g "${pkgs[@]}" &>/dev/null && {
+    for pkg in "${pkgs[@]}"; do
+      echo -e "\\033[1;32m ✓ $pkg \\033[0m"
+      # || echo -e "\\033[1;48;2;230;30;30m 𐄂 ${pkg-}\\033[0m";
+    done
+  }
 }
 
 function print_banner () {

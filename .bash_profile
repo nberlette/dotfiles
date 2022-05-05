@@ -8,14 +8,16 @@ function curdir() {
   printf "%s" "$(cd "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 }
 
-
-[ -r "$(curdir)/.path" ] && source "$(curdir)/.path"
+[ -r ~/.path ] && source ~/.path
 
 # import all vars from .env + .extra into current environment
-srx "$(curdir)"/.{env,extra}
+srx ~/.{env,extra}
 
 # include our core bash environment
-src "$(curdir)"/.{exports,functions,bash_aliases}
+src ~/.{exports,functions,bash_aliases}
+
+# include .bashrc.d/*
+src ~/.bashrc.d
 
 # ruby version manager, cargo (rust), nix
 src ~/.rvm/scripts/rvm ~/.cargo/env ~/.nix-profile/etc/profile.d/nix.sh
@@ -75,36 +77,40 @@ function __gpg_vscode () {
   fi
 }
 
-function gpgsetup () {
+function __gpg_setup () {
   local PINENTRY_CONF GPG_CONF
   PINENTRY_CONF='pinentry-mode loopback'
   GPG_CONF="$HOME/.gnupg/gpg.conf"
-  unset -v GPG_CONFIGURED
+  # unset -v GPG_CONFIGURED
   touch "$GPG_CONF"
   if ! grep -q "$PINENTRY_CONF" "$GPG_CONF" >/dev/null 2>&1; then
-    echo "$PINENTRY_CONF" >>"$GPG_CONF"
+    echo "$PINENTRY_CONF" >> "$GPG_CONF"
   fi
 
   gpg --batch --import <(echo "${GPG_KEY-}" | base64 -d) >&/dev/null
 
   __gpg_gitconfig 2>/dev/null
   __gpg_vscode 2>/dev/null
+  __gpg_reload 2>/dev/null
+  export GPG_CONFIGURED=1
+}
 
+function __gpg_reload () {
   gpgconf --kill gpg-agent
   gpg-connect-agent reloadagent /bye &>/dev/null
-  export GPG_CONFIGURED=1
 }
 
 # super hacky "fix" (bandaid on a bullethole tbh) for gpg failure to initialize
 function gpg_init() {
-  gpgsetup 2>/dev/null
-  (echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null)\
+  [ -z "$GPG_CONFIGURED" ] && __gpg_setup 2>/dev/null
+  __gpg_reload 2>/dev/null
+  (echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null) \
     && printf '\033[1;32m %s\033[0m\n' '🔓 unlocked GPG key and ready to sign!' \
     || printf '\033[1;31m %s\033[0m\n' '🔒 could not unlock GPG key. bad passphrase?';
 }
 
 export GPG_TTY=$(tty)
-[ -n "${GPG_KEY-}" ] && [ -z "$GPG_CONFIGURED" ] && gpgsetup 2>/dev/null
+[ -n "${GPG_KEY-}" ] && [ -z "$GPG_CONFIGURED" ] && __gpg_setup 2>/dev/null
 
 # clean up the path
 dedupe_path 2>/dev/null

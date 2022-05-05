@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 # src: safely source files or folders recursively
 function src() {
 	local file child
@@ -13,6 +14,7 @@ function src() {
 		fi
 	done
 }
+
 # srx: basically a knock-off of dotenv
 function srx() {
 	local file
@@ -24,6 +26,7 @@ function srx() {
 		fi
 	done
 }
+
 # reduce prototype pollution
 function dedupe() {
 	local OLD SEP
@@ -131,21 +134,6 @@ case "$os" in
 					;;
 			esac
 		fi
-
-		# OpenSSL, coreutils, findutils, make, etc.
-		export PATH="${HOMEBREW_PREFIX-}/opt/openssl/bin:$PATH"
-		export LDFLAGS="$LDFLAGS -L${HOMEBREW_PREFIX-}/opt/openssl/lib"
-		export CPPFLAGS="$CPPFLAGS -I${HOMEBREW_PREFIX-}/opt/openssl/include"
-		export OPENSSL_ROOT_DIR="${HOMEBREW_PREFIX-}/opt/openssl"
-		export PKG_CONFIG_PATH="${HOMEBREW_PREFIX-}/opt/openssl/lib/pkgconfig:$PKG_CONFIG_PATH"
-		export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-		export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-		export PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
-		export MANPATH="/usr/local/opt/make/libexec/gnuman:$MANPATH"
-		export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
-		export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
-		export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
-		export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
 		;;
 esac
 
@@ -163,6 +151,24 @@ if [ -z "$PNPM_HOME" ]; then
 fi
 
 export PATH="$PNPM_HOME:$PATH"
+
+# OpenSSL, coreutils, findutils, make, etc.
+export PATH="${HOMEBREW_PREFIX-}/opt/openssl/bin:$PATH"
+export LDFLAGS="$LDFLAGS -L${HOMEBREW_PREFIX-}/opt/openssl/lib"
+export CPPFLAGS="$CPPFLAGS -I${HOMEBREW_PREFIX-}/opt/openssl/include"
+export OPENSSL_ROOT_DIR="${HOMEBREW_PREFIX-}/opt/openssl"
+export PKG_CONFIG_PATH="${HOMEBREW_PREFIX-}/opt/openssl/lib/pkgconfig:$PKG_CONFIG_PATH"
+export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
+export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+export PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
+export MANPATH="/usr/local/opt/make/libexec/gnuman:$MANPATH"
+export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
+export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
+export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+# coreutils
+export PATH="${HOMEBREW_PREFIX-}/opt/coreutils/libexec/gnubin:$PATH"
+
 
 # housekeeping
 function clean_path () {

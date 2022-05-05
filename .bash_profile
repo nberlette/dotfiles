@@ -3,13 +3,19 @@ shell="$(which bash)"
 export SHELL="$shell"
 export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 
-[ -r ~/.path ] && source ~/.path;
+# determine actual script location
+function curdir() {
+  printf "%s" "$(cd "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+}
+
+
+[ -r "$(curdir)/.path" ] && source "$(curdir)/.path"
 
 # import all vars from .env + .extra into current environment
-srx ~/.{env,extra}
+srx "$(curdir)"/.{env,extra}
 
 # include our core bash environment
-src ~/.{exports,functions,bash_aliases}
+src "$(curdir)"/.{exports,functions,bash_aliases}
 
 # ruby version manager, cargo (rust), nix
 src ~/.rvm/scripts/rvm ~/.cargo/env ~/.nix-profile/etc/profile.d/nix.sh
@@ -99,6 +105,9 @@ function gpg_init() {
 
 export GPG_TTY=$(tty)
 [ -n "${GPG_KEY-}" ] && [ -z "$GPG_CONFIGURED" ] && gpgsetup 2>/dev/null
+
+# clean up the path
+dedupe_path 2>/dev/null
 
 # starship shell prompt with fallback
 eval "$(starship init bash)"

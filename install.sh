@@ -79,7 +79,7 @@ function setup_brew() {
     # execute now just to be sure its available for us immediately
     eval "$(brew shellenv 2>/dev/null)"
 
-    brew install "${verbosity-}" --overwrite starship gh supabase/tap/supabase shfmt;
+    brew install "${verbosity-}" --overwrite coreutils starship gh shfmt;
   } >> "$DOTFILES_LOG" 2>&1
 
   # don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)
@@ -104,7 +104,8 @@ function setup_brew() {
           lolcat \
           shellcheck \
           shfmt \
-          pygments;
+          pygments \
+          supabase/tap/supabase ;
 
         # for developing jekyll sites (and other things for github pages, etc)
         if which gem &>/dev/null; then
@@ -197,7 +198,7 @@ function setup_node() {
     fi
   } >> "$DOTFILES_LOG" 2>&1
 
-  global_add zx @antfu/ni dotenv-vault vercel wrangler@latest miniflare@latest cron-scheduler worktop@next
+  global_add zx @antfu/ni dotenv-vault vercel wrangler@latest miniflare@latest
 }
 
 # runs all the other scripts and cleans up after itself. geronimo!

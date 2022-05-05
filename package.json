@@ -1,6 +1,6 @@
 {
   "name": "dotfiles",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "author": "Nicholas Berlette <nick@berlette.com>",
   "description": "Dotfiles configuration for Gitpod and local development",
@@ -14,30 +14,28 @@
     "podfiles",
     "config"
   ],
-  "prettier": "@brlt/prettier",
   "main": "./install.sh",
-  "packageManager": "pnpm@6.32.8",
+  "packageManager": "pnpm@7.0.0",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "postinstall": "corepack enable",
-    "build": "./install.sh",
+    "preinstall": "corepack enable 2>/dev/null",
+    "postinstall": "./install.sh",
     "test": "nr lint && nr format:check",
     "lint": "shellcheck --color=always --shell=bash -x .path .exports .functions .bash* install.sh",
     "shfmt:base": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -s",
-    "shfmt:check": "nr shfmt:base -- -d .path .exports .functions .bash* ./install.sh",
-    "shfmt:write": "nr shfmt:base -- -w .path .exports .functions .bash* ./install.sh",
-    "format:base": "prettier --config package.json --no-error-on-unmatched-pattern --parser sh --plugin=prettier-plugin-sh .bash* .exports .functions .path ./install.sh",
-    "format:check": "nr format:base -- --check",
-    "format": "nr format:base -- --write"
+    "shfmt:check": "nr shfmt:base -- -d .path .exports .functions .bash* install.sh",
+    "shfmt:write": "nr shfmt:base -- -w .path .exports .functions .bash* install.sh",
+    "format:base": "prettier --config package.json --no-error-on-unmatched-pattern",
+    "format:check": "nr format:base -c",
+    "format": "nr format:base -w"
   },
   "devDependencies": {
-    "@antfu/ni": "^0.13.2",
-    "@brlt/prettier": "^1.6.4",
-    "pnpm": "^6.32.7",
-    "prettier": "^2.6.1",
-    "prettier-plugin-sh": "^0.8.1",
+    "@antfu/ni": "^0.16.2",
+    "pnpm": "^7.0.0",
+    "prettier": "^2.6.2",
+    "prettier-plugin-sh": "^0.10.1",
     "shellcheck": "^1.1.0"
   }
 }

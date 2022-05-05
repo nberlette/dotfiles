@@ -193,11 +193,11 @@ function setup_node() {
       curl -fsSL https://get.pnpm.io/install.sh | bash -;
     fi
     if ! which node &>/dev/null || ! node -v &>/dev/null; then
-      pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g lts;
+      (pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g lts) && pnpm setup 2>/dev/null
     fi
   } >> "$DOTFILES_LOG" 2>&1
 
-  global_add zx @antfu/ni dotenv-vault vercel wrangler@beta miniflare@latest cron-scheduler worktop@next
+  global_add zx @antfu/ni dotenv-vault vercel wrangler@latest miniflare@latest cron-scheduler worktop@next
 }
 
 # runs all the other scripts and cleans up after itself. geronimo!

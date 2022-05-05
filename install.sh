@@ -55,7 +55,7 @@ function setup_home() {
   link_dir ".config/gh" "*.yml"
 
   # bash env, etc.
-  for FILE in $(find "${DIR:+$DIR}" -type f -name ".*" -not -name ".git*" -not -name ".*swp"); do
+  for FILE in $(find "${DIR:+$DIR}" -type f -name ".*" -not -name ".git*" -not -name ".*swp" -not -name ".prettier*" -not -name ".shellcheckrc"); do
     # local d="$(dirname -- "$FILE" | sed -e 's|\('"$DIR"'\)|'"$HOME"'|')"
     local b="$(basename -- "$FILE")"
     command ln -fn -v "$FILE" "$HOME/$b" >> "$DOTFILES_LOG" 2>&1
@@ -82,7 +82,15 @@ function setup_brew() {
     # execute now just to be sure its available for us immediately
     eval "$(brew shellenv 2>/dev/null)"
 
-    brew reinstall "${verbosity-}" --overwrite coreutils starship gh shfmt;
+    # "brewup" sequence
+    # brew update "${verbosity-}"
+    # brew upgrade "${verbosity-}"
+    # brew prune "${verbosity-}"
+    # brew cleanup "${verbosity-}"
+    # brew doctor "${verbosity-}"
+
+    brew install "${verbosity-}" --overwrite coreutils starship gh shfmt;
+    brew reinstall "${verbosity-}" coreutils starship gh shfmt;
   } >> "$DOTFILES_LOG" 2>&1
 
   # don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)

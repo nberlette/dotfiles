@@ -83,21 +83,24 @@ alias h="history"
 alias gc='. $(which gitdate) && git commit -v '
 
 # Always use color output for `ls`
-# shellcheck disable=SC2139
-alias ls="command ls ${colorflag}"
-
+if which gls &>/dev/null; then
+  # shellcheck disable=SC2139
+  alias ls="command gls ${colorflag-}"
+else
+  alias ls="command ls ${colorflag-}"
+fi
 # List all files colorized in long format
 # shellcheck disable=SC2139
 
-alias ll="command ls -FAHlosh ${colorflag-}"
+alias ll="ls -FAHlosh ${colorflag-}"
 
 # List all files colorized in long format, including dot files
 # shellcheck disable=SC2139
-alias la="command ls -loFAhHk -sa ${colorflag-}"
+alias la="ls -loFAhHk -sa ${colorflag-}"
 
 # List only directories
 # shellcheck disable=SC2139
-alias lsd="command ls -lhF ${colorflag} | grep --color=always '^d'"
+alias lsd="ls -lhF ${colorflag} | grep --color=always '^d'"
 
 # Always enable colored `grep` output
 alias grep='grep --color=auto '

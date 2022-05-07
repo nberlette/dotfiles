@@ -20,8 +20,6 @@
     "access": "public"
   },
   "scripts": {
-    "preinstall": "corepack enable 2>/dev/null",
-    "postinstall": "./install.sh",
     "test": "nr lint && nr format:check",
     "lint": "shellcheck --color=always --shell=bash -x .path .exports .functions .bash* install.sh",
     "shfmt:base": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -s",

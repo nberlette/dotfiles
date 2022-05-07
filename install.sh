@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd "$(dirname -- "${BASH_SOURCE[0]}")"
+
 verbosity="--quiet"
 OSYS=$(uname | tr '[:upper:]' '[:lower:]')
 IS_DARWIN=$(test "$OSYS" = "darwin" && echo -n 1 || echo -n 0)
@@ -22,8 +24,6 @@ function curdir() {
 [ -f "$(curdir)/.bashrc.d/core.sh" ] && source "$(curdir)/.bashrc.d/core.sh"
 
 DOTFILES_LOG="$(curdir 2>/dev/null || echo -n "$HOME/.dotfiles")/.install.$(date +%s).log"
-
-
 
 # install homebrew (if needed) and some commonly-used global packages. the bare minimum.
 function setup_brew() {
@@ -132,8 +132,8 @@ function bootstrap() {
 	rsync --exclude-from=.rsyncignore -avh --no-perms --mkpath --backup --backup-dir=$backupdir --whole-file --files-from=.rsyncfiles . ~;
 
   # create hardlinks for our gitconfig and gitignore files (they're special)
-  ln -fn -v "$(curdir)/gitconfig" "$HOME/.gitconfig";
-  ln -fn -v "$(curdir)/gitignore" "$HOME/.gitignore";
+  ln -fn -v ./gitconfig "$HOME/.gitconfig";
+  ln -fn -v ./gitignore "$HOME/.gitignore";
 
   source ~/.bashrc
 }
@@ -148,7 +148,8 @@ function setup_home() {
   if [ "$1" == "--force" -o "$1" == "-f" -o "$1" == "-y" -o "$1" == "--yes" ]; then
     bootstrap
   else
-    if [ $- =~ i ]; then
+    # are we in interactive mode? then prompt the user!
+    if [[ $- == *i* ]]; then
       read -p $'\n\033[1;4;33mWARNING\033[0;33m: This will overwrite existing files in your home directory.\033[0m\n\n\033[1;3mDo you really want to continue?\033[0;2m Y[es]/N[o] \033[0m' -n 1
       echo ""
       if [[ $REPLY =~ ^[Yy]$ ]]; then

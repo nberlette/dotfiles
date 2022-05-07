@@ -1,0 +1,16 @@
+.bash_aliases
+.bash_logout
+.bash_profile
+.bashrc
+.bashrc.d/
+.bin/
+.config/
+.editorconfig
+.exports
+.extra
+.functions
+.gnupg/
+.gitconfig.d/
+.inputrc
+.path
+.vscode/settings.json

@@ -1,46 +1,13 @@
 #!/usr/bin/env bash
 
-# src: safely source files or folders recursively
-function src() {
-	local file child
-	for file in "$@"; do
-		if [ -r "$file" ] && [ -f "$file" ]; then
-			# shellcheck source=/dev/null
-			source "$file"
-		elif [ -d "$file" ]; then
-			for child in "$file"/**; do
-				src "$child"
-			done
-		fi
-	done
-}
-
-# srx: basically a knock-off of dotenv
-function srx() {
-	local file
-	for file in "$@"; do
-		if [ -r "$file" ]; then
-			set -a
-			src "$file"
-			set +a
-		fi
-	done
-}
-
-# reduce prototype pollution
-function dedupe() {
-	local OLD SEP
-	OLD="${1-}"
-	SEP="${2:-":"}"
-	echo -n "$(perl -e 'print join("'"${SEP:-":"}"'",grep { not $seen{$_}++ } split(/'"${SEP:-":"}"'/, $ARGV[0]))' "$OLD")"
-}
-# alias dedupe_path=dedupe
+source "$HOME/.dotfiles/.bashrc.d/core.sh"
 
 if [ -z "$PATH" ]; then
 	export PATH="$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/sbin"
 fi
 
-homebrew_prefix="${HOMEBREW_PREFIX:-"$(brew --prefix)"}"
+HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-"$(brew --prefix)"}"
+export HOMEBREW_PREFIX
 
 # go
 export GOPATH="$HOME/.go"
@@ -125,12 +92,12 @@ case "$os" in
 				(*bash)
 					# shellcheck source=/dev/null
 					[ -f "$HOME/.iterm2_shell_integration.bash" ] \
-						&& source "$HOME/.iterm2_shell_integration.bash" 2> /dev/null
+						&& src"$HOME/.iterm2_shell_integration.bash" 2> /dev/null
 					;;
 				(*zsh)
 					# shellcheck source=/dev/null
 					[ -f "$HOME/.iterm2_shell_integration.zsh" ] \
-						&& source "$HOME/.iterm2_shell_integration.zsh" 2> /dev/null
+						&& src "$HOME/.iterm2_shell_integration.zsh" 2> /dev/null
 					;;
 			esac
 		fi
@@ -168,15 +135,3 @@ export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gnu-sed/lib
 export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
 # coreutils
 export PATH="${HOMEBREW_PREFIX-}/opt/coreutils/libexec/gnubin:$PATH"
-
-
-# housekeeping
-function clean_path () {
-  if type -t dedupe >&/dev/null; then
-    PATH="$(dedupe "$PATH" ":")"
-  fi
-  PATH="${PATH//"::"/}" # remove any double-colons from missing path variables
-  PATH="${PATH#:}" # remove any trailing colon
-  PATH="${PATH%:}" # remove any preceding colon
-	export PATH # do what it 'posed to
-}

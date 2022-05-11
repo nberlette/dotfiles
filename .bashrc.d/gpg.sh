@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+## ------------------------------------------------------------------------ ##
+##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-05-11  ##
+## ------------------------------------------------------------------------ ##
+##  https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/gpg.sh        ##
+## ------------------------------------------------------------------------ ##
+
 function get_json() {
   local path file
   file="${1:-"/workspace/.vscode-remote/settings.json"}"

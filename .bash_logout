@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 if [ "$SHLVL" = 1 ]; then
-  [ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
+  if which clear_console &>/dev/null
+    then clear_console -q 2>/dev/null
+  elif [ -x /usr/bin/clear_console ]
+    then /usr/bin/clear_console -q 2>/dev/null
+  fi # clear_console
 fi

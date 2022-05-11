@@ -1,9 +1,42 @@
 #!/usr/bin/env bash
 
-#----------------------------------------------------------
-# @file .bash_aliases
-# @link <https://github.com/nberlette/dotfiles>
-#----------------------------------------------------------
+## ------------------------------------------------------------------------ ##
+##  .bash_aliases                            Nicholas Berlette, 2022-05-11  ##
+## ------------------------------------------------------------------------ ##
+##  https://github.com/nberlette/dotfiles/blob/main/.bash_aliases           ##
+## ------------------------------------------------------------------------ ##
+
+# make sure our .bin dir is in the PATH
+if ! type osc &>/dev/null; then
+  export PATH="$HOME/.bin:${DOTFILES_PREFIX:-"$HOME/.dotfiles/.bin"}:$PATH"
+fi
+
+alias bold="osc 01"
+alias undl="osc 04"
+alias ital="osc 03"
+alias dark="osc 02"
+alias flsh="osc 05"
+alias inv="osc 07"
+alias reset="osc 00"
+alias blk="osc 38 02 00 00 00"
+alias red="osc 01 31"
+alias grn="osc 01 32"
+alias ylw="osc 01 33"
+alias orn="osc 01 38 02 255 143 51"
+alias blu="osc 01 34"
+alias mag="osc 01 35"
+alias cyn="osc 01 36"
+alias wht="osc 38 02 255 255 255"
+alias gry="osc 37"
+alias blk_b="osc 48 02 00 00 00"
+alias red_b="osc 01 41"
+alias grn_b="osc 01 42"
+alias ylw_b="osc 01 43"
+alias orn_b="osc 01 48 02 255 143 51"
+alias blu_b="osc 01 44"
+alias mag_b="osc 01 45"
+alias cyn_b="osc 01 46"
+alias wht_b="osc 48 02 255 255 255"
 
 case "$(uname -s)" in
     Darwin)
@@ -29,22 +62,23 @@ case "$(uname -s)" in
         ;;
 esac
 
+# @deprecated
 # protip for aliasing all gnupg methods to their proper place
-for __ga in convert-keyring dirmngr dirmngr-client gpg gpg2 gpg-agent gpg-connect-agent gpg-error gpg-zip gpgconf gpgsm gpgsplit gpgtar gpgv kbxutil mpicalc watchgnupg starship gh fontforge; do
-    if [ -x "/usr/local/bin/${__ga-}" ]; then
-        # shellcheck disable=SC2139
-        alias "${__ga-}"="/usr/local/bin/${__ga-}"
-    else
-        if [ -x "/usr/bin/${__ga}" ]; then
-            sudo ln -sfn /usr/bin/"${__ga}" /usr/local/bin
-        elif [ -x "/home/linuxbrew/.linuxbrew/bin/${__ga}" ]; then
-            sudo ln -sfn /home/linuxbrew/.linuxbrew/bin/"${__ga}" /usr/local/bin
-        elif [ -x "/opt/homebrew/bin/${__ga-}" ]; then
-            sudo ln -sfn /opt/homebrew/bin/"${__ga-}" /usr/local/bin
-        fi
-    fi
-done
-unset -v __ga
+# for __ga in convert-keyring dirmngr dirmngr-client gpg gpg2 gpg-agent gpg-connect-agent gpg-error gpg-zip gpgconf gpgsm gpgsplit gpgtar gpgv kbxutil mpicalc watchgnupg starship gh fontforge; do
+#     if [ -x "/usr/local/bin/${__ga-}" ]; then
+#         # shellcheck disable=SC2139
+#         alias "${__ga-}"="/usr/local/bin/${__ga-}"
+#     else
+#         if [ -x "/usr/bin/${__ga}" ]; then
+#             sudo ln -sfn /usr/bin/"${__ga}" /usr/local/bin
+#         elif [ -x "/home/linuxbrew/.linuxbrew/bin/${__ga}" ]; then
+#             sudo ln -sfn /home/linuxbrew/.linuxbrew/bin/"${__ga}" /usr/local/bin
+#         elif [ -x "/opt/homebrew/bin/${__ga-}" ]; then
+#             sudo ln -sfn /opt/homebrew/bin/"${__ga-}" /usr/local/bin
+#         fi
+#     fi
+# done
+# unset -v __ga
 
 # Date formatting string for ls command (macOS)
 # dateflag="-D \$'  \e[2;3;4mM:\e[m%F\e[2mT\e[m%H\e[5m:\e[m%M\e[5m:\e[m%S\e[2m-%Z\e[m  '"
@@ -230,30 +264,30 @@ alias pip='pip3'
 alias python='python3'
 alias venv="source '\$HOME/.venv/bin/activate'"
 
-alias bold="__osc 01"
-alias undl="__osc 04"
-alias ital="__osc 03"
-alias dark="__osc 02"
-alias flsh="__osc 05"
-alias inv="__osc 07"
-alias reset="__osc 00"
-alias blk="__osc 38 02 00 00 00"
-alias red="__osc 01 31"
-alias grn="__osc 01 32"
-alias ylw="__osc 01 33"
-alias blu="__osc 01 34"
-alias mag="__osc 01 35"
-alias cyn="__osc 01 36"
-alias wht="__osc 38 02 255 255 255"
-alias gry="__osc 37"
-alias blk_b="__osc 48 02 00 00 00"
-alias red_b="__osc 01 41"
-alias grn_b="__osc 01 42"
-alias ylw_b="__osc 01 43"
-alias blu_b="__osc 01 44"
-alias mag_b="__osc 01 45"
-alias cyn_b="__osc 01 46"
-alias wht_b="__osc 48 02 255 255 255"
+alias bold="osc 01"
+alias undl="osc 04"
+alias ital="osc 03"
+alias dark="osc 02"
+alias flsh="osc 05"
+alias inv="osc 07"
+alias reset="osc 00"
+alias blk="osc 38 02 00 00 00"
+alias red="osc 01 31"
+alias grn="osc 01 32"
+alias ylw="osc 01 33"
+alias blu="osc 01 34"
+alias mag="osc 01 35"
+alias cyn="osc 01 36"
+alias wht="osc 38 02 255 255 255"
+alias gry="osc 37"
+alias blk_b="osc 48 02 00 00 00"
+alias red_b="osc 01 41"
+alias grn_b="osc 01 42"
+alias ylw_b="osc 01 43"
+alias blu_b="osc 01 44"
+alias mag_b="osc 01 45"
+alias cyn_b="osc 01 46"
+alias wht_b="osc 48 02 255 255 255"
 
 if which yarn >&/dev/null; then
     alias yarn="yarn --ignore-optional --ignore-platform --ignore-engines -s"

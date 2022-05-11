@@ -1,9 +1,13 @@
 {
   "name": "dotfiles",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
-  "author": "Nicholas Berlette <nick@berlette.com>",
-  "description": "Dotfiles configuration for Gitpod and local development",
+  "author": {
+    "name": "Nicholas Berlette",
+    "email": "nick@berlette.com",
+    "url": "https://github.com/nberlette"
+  },
+  "description": "Nick's dotfiles and bash env. macOS or Gitpod",
   "repository": "nberlette/dotfiles",
   "bugs": "https://github.com/nberlette/dotfiles/issues",
   "readme": "https://github.com/nberlette/dotfiles#readme",
@@ -20,20 +24,27 @@
     "access": "public"
   },
   "scripts": {
-    "test": "nr lint && nr format:check",
-    "lint": "shellcheck --color=always --shell=bash -x .path .exports .functions .bash* install.sh",
-    "shfmt:base": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -s",
-    "shfmt:check": "nr shfmt:base -- -d .path .exports .functions .bash* install.sh",
-    "shfmt:write": "nr shfmt:base -- -w .path .exports .functions .bash* install.sh",
-    "format:base": "prettier --config package.json --no-error-on-unmatched-pattern",
-    "format:check": "nr format:base -c",
-    "format": "nr format:base -w"
+    "postinstall": "brew install --quiet --overwrite shfmt &>/dev/null",
+    "test": "nr lint",
+    "lint": "run-s check:*",
+    "clean": "npx -q -y rimraf node_modules .backup .install*.log",
+    "shfmt": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -s",
+    "shellcheck": "shellcheck --color=always --shell=bash -x",
+    "check:shfmt": "nr shfmt -- -d .path .exports .functions .bash* install.sh",
+    "check:shellsheck": "nr shellcheck -- .path .exports .functions .bash* install.sh",
+    "check:prettier": "prettier -c .",
+    "format:shfmt": "nr shfmt -- -w .path .exports .functions .bash* install.sh",
+    "format:prettier": "prettier -w .",
+    "format": "run-s format:*"
   },
+  "prettier": "@brlt/prettier/bash",
   "devDependencies": {
-    "@antfu/ni": "^0.16.2",
-    "pnpm": "^7.0.0",
+    "@brlt/n": "^0.1.1",
+    "@brlt/prettier": "^1.6.4",
+    "npm-run-all": "4.1.5",
+    "pnpm": "^7.0.1",
     "prettier": "^2.6.2",
-    "prettier-plugin-sh": "^0.10.1",
+    "prettier-plugin-sh": "^0.11.0",
     "shellcheck": "^1.1.0"
   }
 }

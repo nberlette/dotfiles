@@ -5,6 +5,7 @@
 .bashrc.d/
 .bin/
 .config/
+.dircolors
 .editorconfig
 .exports
 .extra
@@ -13,4 +14,5 @@
 .gitconfig.d/
 .inputrc
 .path
-.vscode/settings.json
+.hushlogin
+.profile

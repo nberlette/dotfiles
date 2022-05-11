@@ -1,5 +1,5 @@
 .gitpod.yml
-.install.*.log
+.*.log
 .prettierrc
 .prettierignore
 bootstrap.sh
@@ -27,3 +27,6 @@ README.md
 .rsyncfiles
 gitignore
 gitconfig
+bin
+.bin/.keep
+.keep

@@ -45,7 +45,7 @@ if which dircolors &>/dev/null; then
   [ -r ~/.dircolors ] && eval "$(dircolors -b ~/.dircolors 2>/dev/null)" || eval "$(dircolors -b)"
 fi
 
-export PATH="${HOMEBREW_PREFIX+$HOMEBREW_PREFIX:}$PATH"
+export PATH="${HOMEBREW_PREFIX+$HOMEBREW_PREFIX/bin:}$PATH"
 
 # clean up $PATH
 if type dedupe_path &>/dev/null; then

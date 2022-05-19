@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  install.sh                               Nicholas Berlette, 2022-05-11  ##
+##  install.sh                               Nicholas Berlette, 2022-05-19  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/install.sh              ##
 ## ------------------------------------------------------------------------ ##
@@ -34,13 +34,26 @@ STEP_TOTAL=3
 
 # current working directory
 function curdir() {
-  # echo -n "$(readlink "$(test -z "$CI" && echo -n "-f" || echo -n "-n")" "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null
   echo -n "$(cd "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 }
 
+export TZ='America/Los_Angeles'
+export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
+DOTFILES_LOG="${DOTFILES_PREFIX-}/_installs/$(date +%F)-$(date +%s).log"
+DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
+[ -d "$DOTFILES_LOGPATH" ] || mkdir -p "$DOTFILES_LOGPATH" &>/dev/null;
+
+DOTFILES_BACKUP_PATH="$HOME/.dotfiles/_installs/$(date +%F)-$(date +%s)-backup/"
+mkdir -p $DOTFILES_BACKUP_PATH &>/dev/null
+
+DOTFILES_CORE="$(curdir 2>/dev/null || echo -n $DOTFILES_PREFIX)/.bashrc.d/core.sh"
+[ -f "$DOTFILES_CORE" ] && source "$DOTFILES_CORE"
+
+cd "$(dirname -- "${BASH_SOURCE[0]}")"
+
 [ -f "$(curdir)/.bashrc.d/core.sh" ] && . "$(curdir)/.bashrc.d/core.sh";
 
-DOTFILES_LOG="$(curdir 2>/dev/null || echo -n "$HOME/.dotfiles")/.install.$(date +%s).log"
+DOTFILES_LOG="$(curdir 2>/dev/null || echo -n "$HOME/.dotfiles")/.install/$(date +%s).log"
 
 # always ebable verbose logging if in CI/CD
 [ -n "${CI:+x}" ] && verbosity="--verbose"
@@ -69,32 +82,35 @@ function setup_brew() {
   # don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)
   # otherwise this usually takes > 120s and fails hard thanks to gitpod's rather unreasonable time limit.
   # also, skip this step if we're in CI/CD (github actions), because... money reasons.
-  if [ -z "$CI" ] && [[ $- == *i*  || "$IS_INTERACTIVE" == "1" ]]; then
-    # install some essentials
-    {
-      brew install "${verbosity-}" --overwrite \
-        gcc \
-        cmake \
-        make \
-        bash \
-        git \
-        go \
-        python \
-        jq \
-        docker \
-        fzf \
-        neovim \
-        lolcat \
-        shellcheck \
-        shfmt \
-        pygments \
-        supabase/tap/supabase ;
+  if [ -z "$CI" ] && [ -t 0 ]; then
+    read -n 1 -i n -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m \033[1;33mInstall/update core utilities like git, go, docker, bash, etc.?\033[0m\n\n\033[0;2m(might add 5+ minutes to install)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;3m or \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+    local prompt_status=$?
+    if [[ $REPLY =~ ^[Yy]$ ]] && (($prompt_status < 129)); then
+      # install some essentials
+      {
+        brew install "${verbosity-}" --overwrite \
+          gcc \
+          cmake \
+          make \
+          bash \
+          git \
+          go \
+          jq \
+          docker \
+          fzf \
+          neovim \
+          lolcat \
+          shellcheck \
+          shfmt \
+          pygments \
+          supabase/tap/supabase ;
 
-      # for developing jekyll sites (and other things for github pages, etc)
-      if which gem &>/dev/null; then
-        gem install jekyll bundler 2>/dev/null
-      fi
-    } | tee -a "$DOTFILES_LOG" 2>&1
+        # for developing jekyll sites (and other things for github pages, etc)
+        if which gem &>/dev/null; then
+          gem install jekyll bundler 2>/dev/null
+        fi
+      } | tee -a "$DOTFILES_LOG" 2>&1
+    fi
 
     # for macOS
     if [ "$IS_DARWIN" = 1 ]; then
@@ -102,21 +118,23 @@ function setup_brew() {
         which rvm &>/dev/null || curl -fsSL https://get.rvm.io | bash -s stable --rails;
 
         brew tap jeroenknoops/tap
-        brew install "${verbosity-}" gcc coreutils gitin gpg gpg-suite pinentry-mac python3;
+        brew install "${verbosity-}" gcc coreutils gitin gpg gpg-suite pinentry-mac;
         export SHELL="${HOMEBREW_PREFIX:-}/bin/bash";
 
         # if interactive and on macOS, we're probably on a macbook / iMac desktop. so add casks. (apps)
-        if [[ "$IS_INTERACTIVE" == "1" ]]; then
-          brew install --quiet --cask iterm2;
-          curl -fsSL https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash -;
-          # Google Chrome, Prisma, PIA VPN
-          brew tap homebrew/cask-versions;
-          brew tap homebrew/cask-fonts;
-          brew install --casks font-fira-code font-oswald font-ubuntu font-caskaydia-cove-nerd-font fontforge \
-            graphql-playground prisma-studio private-internet-access qlmarkdown \
-            visual-studio-code visual-studio-code-insiders \
-            google-chrome google-chrome-canary firefox firefox-nightly;
-        fi
+          read -n 1 -i n -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m \033[1;33mInstall or upgrade \033[3;4mall\033[0;1;33m macOS apps, addons, and fonts?\033[0m\n\n\033[0;2m(could take up to ten minutes to complete)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;3m or \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+          if [[ $REPLY =~ ^[Yy]$ ]] && (($prompt_code <= 128)); then
+            brew install --quiet python3 fontforge ;
+            brew install --quiet --cask iterm2;
+            curl -fsSL https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash -;
+            # Google Chrome, Prisma, PIA VPN
+            brew tap homebrew/cask-versions;
+            brew tap homebrew/cask-fonts;
+            brew install --casks font-fira-code font-oswald font-ubuntu font-caskaydia-cove-nerd-font fontforge \
+              graphql-playground prisma-studio private-internet-access qlmarkdown \
+              visual-studio-code visual-studio-code-insiders \
+              google-chrome google-chrome-canary firefox firefox-nightly;
+          fi
       } | tee -a "$DOTFILES_LOG" 2>&1
     else
       brew install --quiet --overwrite gnupg2 xclip
@@ -145,7 +163,13 @@ function setup_node() {
     fi
   } | tee -a "$DOTFILES_LOG" 2>&1
 
-  global_add zx @brlt/n @brlt/prettier prettier dotenv-vault vercel wrangler@latest miniflare@latest @railway/cli prettier degit
+   global_add zx @brlt/n @brlt/prettier prettier @brlt/eslint-config eslint @brlt/utils degit
+
+  read -n 1 -i n -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m\033[1;33mInstall CLIs for Vercel/Railway/Netlify/Cloudflare?\033[0m\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;3m or \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+  local prompt_status=$?
+  if [[ $REPLY =~ ^[Yy]$ ]] && (($prompt_status < 128)); then
+    global_add dotenv-vault vercel wrangler@latest miniflare@latest @railway/cli netlify-cli degit
+  fi
 
   print_step_complete
 }
@@ -176,7 +200,7 @@ function print_banner () {
   local message divider i
   case "${1-}" in
     step)
-      printf '\033[2m[%d of %d]\033[0m\n\033[1m%s\033[0m\n\n' "$STEP_NUM" "$STEP_TOTAL" "${*:2}"
+      printf '\033[1;2;4m(%d/%d)\033[0m \033[1m%s\033[0m\n\n' "$STEP_NUM" "$STEP_TOTAL" "${*:2}"
     ;;
     *)
         divider="" divider_char="-"
@@ -189,7 +213,7 @@ function print_banner () {
         for ((i=0;$i<${COLUMNS:-100};i++)); do
           divider+="${divider_char:-"="}"
         done
-        printf '\n\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
+        printf '\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
     ;;
   esac
 }
@@ -225,28 +249,20 @@ function main() {
   ## syncing the home directory ###################################################################
   print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
 
-  if [ "$IS_INTERACTIVE" -ne "1" ]; then
-    echo $'\n\033[1;4;33mWARNING\033[0;1m~/.dotfiles/install.sh\033[1;31m is not being run interactively.\033[0m'
-    setup_home && print_step_complete && return 0
-  else
-    if [[ "${flags:+$flags}" =~ ^([-]{1,2}(y(es)?|f(orce)?))$ ]]; then
+  # if we are in interactive mode, and not forcing, ask the user if they want to proceed
+  if [ -t 0 ] && [ -z "$CI" ]; then
+    read -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0;1;31m DANGER \033[0m ·  \033[3;31mContinuing with install will overwrite important files in \033[3;4m'"$HOME"$'\033[0;3;31m!\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (no response within 30s and \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;3m ⁄ \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+    local prompt_status=$?
+    echo ""
+    # if the user says yes, or force, run the install
+    if [[ "$REPLY" =~ ^[Yy]$ ]] || (($prompt_status > 128)); then
       setup_home && print_step_complete && return 0
     else
-      # if we are in interactive mode, and not forcing, ask the user if they want to proceed
-      if [[ $- == *i* ]]; then
-        read -p $'\n\033[1;7;33m⚠ DANGER! ⚠\033[0;33m If you proceed with install, this will discard <probably important> configuration files in your homedir!\033[0m\n\n\033[1;3mWant to accept the risk and continue...?\033[0;2m Y[es]/N[o]/F[lip a coin] \033[0m' -n 1
-        echo ""
-        # if the user says yes, or force, run the install
-        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-          setup_home && print_step_complete && return 0
-        else
-          echo -e '\n\033[1;31mAborted.\033[0m' && exit 1
-        fi # $REPLY
-      fi # $-
-    fi # $flags
-  fi # $IS_INTERACTIVE
+      echo -e '\n\033[1;31mAborted.\033[0m' && exit 1
+    fi # $REPLY
+  fi # $-
 
-  # print_step_complete
+  print_step_complete
 
   return 0
 }
@@ -257,5 +273,4 @@ function cleanup_env () {
 }
 
 # run it and clean up after!
-{ main "$@" && cleanup_env && unset -f cleanup_env; } || exit $?
-exit 0
+main "$@" && cleanup_env && unset -f cleanup_env;

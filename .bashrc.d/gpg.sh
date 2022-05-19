@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-05-11  ##
+##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-05-19  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/gpg.sh        ##
 ## ------------------------------------------------------------------------ ##
@@ -24,6 +24,8 @@ function set_json() {
 }
 
 function __gpg_gitconfig () {
+  git config --global user.name "${GIT_COMMITTER_NAME:-"$(git config user.name)"}"
+  git config --global user.email "${GIT_COMMITTER_EMAIL:-"$(git config user.email)"}"
   git config --global user.signingkey "${GPG_KEY_ID:-$GIT_COMMITTER_EMAIL}";
   git config --global commit.gpgsign "true"
   git config --global tag.gpgsign "true"
@@ -46,16 +48,14 @@ function __gpg_setup () {
   GPG_CONF="$HOME/.gnupg/gpg.conf"
   # unset -v GPG_CONFIGURED
   touch "$GPG_CONF"
-  if ! grep -q "$PINENTRY_CONF" "$GPG_CONF" >/dev/null 2>&1; then
+  if ! grep -q "$PINENTRY_CONF" "$GPG_CONF" &>/dev/null; then
     echo "$PINENTRY_CONF" >> "$GPG_CONF"
   fi
 
-  gpg --batch --import <(echo "${GPG_KEY-}" | base64 -d) >&/dev/null
+  chmod 700 ~/.gnupg &>/dev/null
+  gpg --batch --import <(echo "${GPG_KEY-}" | base64 -d) &>/dev/null
 
-  __gpg_gitconfig 2>/dev/null
-  __gpg_vscode 2>/dev/null
-  __gpg_reload 2>/dev/null
-  export GPG_CONFIGURED=1
+  ( __gpg_gitconfig &>/dev/null; __gpg_vscode; __gpg_reload; ) &>/dev/null && export GPG_CONFIGURED=1
 }
 
 function __gpg_reload () {
@@ -68,8 +68,8 @@ function gpg_init() {
   [ -z "$GPG_CONFIGURED" ] && __gpg_setup 2>/dev/null
   __gpg_reload 2>/dev/null
   (echo "" | gpg --clear-sign --pinentry-mode loopback >/dev/null) \
-    && printf '\033[1;32m %s\033[0m\n' '🔓 unlocked GPG key and ready to sign!' \
-    || printf '\033[1;31m %s\033[0m\n' '🔒 could not unlock GPG key. bad passphrase?';
+    && printf '\033[1;32m %s\033[0m\n' '🟢 🔐 GPG unlocked and ready to sign!' \
+    || printf '\033[1;31m %s\033[0m\n' '🛑 🔒 GPG failed to unlock! Bad passphrase?';
 }
 
 export GPG_TTY=$(tty)

@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  .bash_profile                            Nicholas Berlette, 2022-05-11  ##
+## .dotfiles                                                     2022-05-18 ##
 ## ------------------------------------------------------------------------ ##
-##  https://github.com/nberlette/dotfiles/blob/main/.bash_profile           ##
+##      https://github.com/nberlette/dotfiles/blob/main/.bash_profile       ##
+## ------------------------------------------------------------------------ ##
+##              MIT © Nicholas Berlette <nick@berlette.com>                 ##
 ## ------------------------------------------------------------------------ ##
 
 shell="$(which bash)"
@@ -28,7 +30,7 @@ fi
 srx ~/.{env,extra} "${PWD-}"/.{env,env.d}
 
 # include our core bash environment
-src ~/.{exports,functions,bash_aliases,dircolors}
+src ~/.{exports,functions,bash_aliases}
 
 # ruby version manager, cargo (rust), nix
 src ~/.rvm/scripts/rvm ~/.cargo/env ~/.nix-profile/etc/profile.d/nix.sh

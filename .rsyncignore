@@ -1,32 +1,38 @@
+# build process
 .gitpod.yml
-.*.log
-.prettierrc
-.prettierignore
 bootstrap.sh
 install.sh
-package.json
-package-lock.json
+banner.sh
+build.sh
+# logs from installation
+*.log
+.*.log
+# docs
+docs
+docs/*
+LICENSE*
+README*
+license*
+readme*
+*.md
+# lint
+.prettierrc
+.prettierignore
+.shellcheckrc
+# git
+.git*
+.git/*
+git*
+# ignore oneself
+.rsyncignore
+.rsyncfiles
+# package.json etc
+package*.json
 pnpm-lock.yaml
 yarn.lock
 npm-shrinkwrap.json
-.DS_Store
-license.md
-readme.md
-LICENSE
-LICENSE.md
-README.md
-.shellcheckrc
-.gitignore
-.gitconfig
-.gitattributes
-.gitmodules
-.github
-.git
-.git/*
-.rsyncignore
-.rsyncfiles
-gitignore
-gitconfig
+# misc
 bin
-.bin/.keep
-.keep
+.*keep
+**/.*keep
+.DS_Store

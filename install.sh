@@ -262,7 +262,10 @@ function main() {
     fi # $REPLY
   fi # $-
 
-  print_step_complete
+  if which gpg &>/dev/null && [ ! -x /usr/local/bin/gpg ]; then
+    sudo ln -sf "$(which gpg 2>/dev/null)" /usr/local/bin/gpg
+  fi
+  chmod 700 ~/.gnupg &>/dev/null;
 
   return 0
 }

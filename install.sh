@@ -39,21 +39,17 @@ function curdir() {
 
 export TZ='America/Los_Angeles'
 export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
-DOTFILES_LOG="${DOTFILES_PREFIX-}/_installs/$(date +%F)-$(date +%s).log"
+DOTFILES_LOG="${DOTFILES_PREFIX-}/_installs/$(date +%F)-$(date +%s)/install.log"
 DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
 [ -d "$DOTFILES_LOGPATH" ] || mkdir -p "$DOTFILES_LOGPATH" &>/dev/null;
 
-DOTFILES_BACKUP_PATH="$HOME/.dotfiles/_installs/$(date +%F)-$(date +%s)-backup/"
+DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup/"
 mkdir -p $DOTFILES_BACKUP_PATH &>/dev/null
 
 DOTFILES_CORE="$(curdir 2>/dev/null || echo -n $DOTFILES_PREFIX)/.bashrc.d/core.sh"
 [ -f "$DOTFILES_CORE" ] && source "$DOTFILES_CORE"
 
 cd "$(dirname -- "${BASH_SOURCE[0]}")"
-
-[ -f "$(curdir)/.bashrc.d/core.sh" ] && . "$(curdir)/.bashrc.d/core.sh";
-
-DOTFILES_LOG="$(curdir 2>/dev/null || echo -n "$HOME/.dotfiles")/.install/$(date +%s).log"
 
 # always ebable verbose logging if in CI/CD
 [ -n "${CI:+x}" ] && verbosity="--verbose"

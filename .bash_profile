@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-## .dotfiles                                                     2022-05-18 ##
+## .bash_profile                                                 2022-05-19 ##
 ## ------------------------------------------------------------------------ ##
 ##      https://github.com/nberlette/dotfiles/blob/main/.bash_profile       ##
 ## ------------------------------------------------------------------------ ##
@@ -49,7 +49,7 @@ export PATH="${HOMEBREW_PREFIX+$HOMEBREW_PREFIX:}$PATH"
 
 # clean up $PATH
 if type dedupe_path &>/dev/null; then
-  dedupe_path 2>/dev/null
+  export PATH="$(dedupe_path 2>/dev/null || echo -n "$PATH")"
 fi
 
 # make sure our gitconfig is up to date

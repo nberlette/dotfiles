@@ -1,12 +1,13 @@
 # build process
-.gitpod.yml
 bootstrap.sh
 install.sh
-banner.sh
+.bin/banner.sh
 build.sh
+
 # logs from installation
 *.log
 .*.log
+
 # docs
 docs
 docs/*
@@ -15,22 +16,31 @@ README*
 license*
 readme*
 *.md
+
 # lint
 .prettierrc
 .prettierignore
 .shellcheckrc
+
 # git
-.git*
-.git/*
-git*
+.git/
+.github/
+.gitignore
+.gitconfig
+.gitpod.yml
+gitignore
+gitconfig
+
 # ignore oneself
 .rsyncignore
 .rsyncfiles
+
 # package.json etc
 package*.json
 pnpm-lock.yaml
 yarn.lock
 npm-shrinkwrap.json
+
 # misc
 bin
 .*keep

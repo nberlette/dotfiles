@@ -1,6 +1,4 @@
-# Warning: This config does not include keys that have an unset value
-
-"$schema" = 'https://starship.rs/config-schema.json'
+# "$schema" = 'https://starship.rs/config-schema.json'
 
 format = '$time$username$directory$sudo$git_branch$git_status$git_metrics$git_state$git_commit$hg_branch$package$nodejs$docker_context$golang$deno$php$python$ruby$rust$nix_shell$line_break$status$character'
 

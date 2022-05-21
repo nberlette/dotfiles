@@ -56,12 +56,8 @@ case "$os" in
 		# shellcheck source=/dev/null
 
 		if [ -d /home/linuxbrew/.linuxbrew ]; then
-			export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:$PATH"
-			export HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
-			export HOMEBREW_CELLAR="/home/linuxbrew/.linuxbrew/Cellar"
-			export HOMEBREW_REPOSITORY="/home/linuxbrew/.linuxbrew/Homebrew"
-			export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/bin:/usr/local/sbin:${PATH+:$PATH}"
-			export MANPATH="/home/linuxbrew/.linuxbrew/share/man:/usr/local/share/man:/usr/share/man:$HOME/.local/share/man:${MANPATH+:$MANPATH}:"
+			export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/bin:/usr/local/sbin${PATH+:$PATH}"
+			export MANPATH="/home/linuxbrew/.linuxbrew/share/man:/usr/local/share/man:/usr/share/man:$HOME/.local/share/man${MANPATH+:$MANPATH}:"
 			export INFOPATH="/home/linuxbrew/.linuxbrew/share/info:/usr/local/share/info:/usr/share/info:$HOME/.local/share/info:${INFOPATH:-}"
 		fi
 		;;
@@ -93,9 +89,10 @@ case "$os" in
 		fi
 
 		# iTerm.app
-		if [[ "$os" == "darwin" && "$TERM_PROGRAM" == "iTerm.app" ]]
+		if [[ "$os" == "darwin" ]] && [[ "$TERM_PROGRAM" == "iTerm.app" ]]
     then
       [ -d "$HOME/.iterm2" ] && export PATH="$HOME/.iterm2:$PATH";
+
 			case "$SHELL" in
 				*bash)
 					# shellcheck source=/dev/null

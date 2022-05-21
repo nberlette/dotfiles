@@ -6,9 +6,9 @@
 ##  https://github.com/nberlette/dotfiles/blob/main/.functions              ##
 ## ------------------------------------------------------------------------ ##
 
-if [ -f ~/.bashrc.d/core.sh ]; then
-  source ~/.bashrc.d/core.sh 2>/dev/null;
-fi
+[ -r ~/.bashrc.d/core.sh ] && {
+  source "$HOME/.bashrc.d/core.sh" 2>/dev/null || source "$HOME/.dotfiles/.bashrc.d/core.sh" 2>/dev/null;
+} || exit $?
 
 # helper function for printing colorful status messages to the terminal
 function __status() {

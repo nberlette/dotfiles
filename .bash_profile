@@ -9,6 +9,6 @@
 ##              MIT © Nicholas Berlette <nick@berlette.com>                 ##
 ## ------------------------------------------------------------------------ ##
 
-if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
+if [ -n "$BASH_VERSION" ] && [ -r "$HOME/.bashrc" ]; then
   . "$HOME/.bashrc"
 fi

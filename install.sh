@@ -49,7 +49,7 @@ STEP_TOTAL=3
 if ! type curdir &>/dev/null; then
   # determine actual script location
   function curdir() {
-    realpath -L -P -e "${1:-"${BASH_SOURCE[0]}"}" 2>/dev/null
+    realpath -L -m -q "${1:-"${BASH_SOURCE[0]}"}" 2>/dev/null
   }
 fi
 
@@ -64,7 +64,8 @@ DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
 DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup/"
 mkdir -p $DOTFILES_BACKUP_PATH &>/dev/null
 
-DOTFILES_CORE="$(curdir 2>/dev/null || echo -n $DOTFILES_PREFIX)/.bashrc.d/core.sh"
+DOTFILES_CORE="$(curdir 2>/dev/null || echo -n "${DOTFILES_PREFIX:-"$HOME/.dotfiles"}")/.bashrc.d/core.sh"
+
 [ -f "$DOTFILES_CORE" ] && source "$DOTFILES_CORE"
 
 cd "$(dirname -- "$(curdir)")" 2>/dev/null;

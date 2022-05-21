@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .functions                               Nicholas Berlette, 2022-05-11  ##
+##  .functions                               Nicholas Berlette, 2022-05-21  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.functions              ##
 ## ------------------------------------------------------------------------ ##
+
+if [ -f ~/.bashrc.d/core.sh ]; then
+  source ~/.bashrc.d/core.sh 2>/dev/null;
+fi
 
 # helper function for printing colorful status messages to the terminal
 function __status() {
@@ -33,7 +37,6 @@ function __status() {
 alias __print_msg="__status"
 alias status="__status"
 
-
 function resolve () {
   local verbose
   [[ "$1" == "-v" || "$1" == "--verbose" ]] && { verbose=1; shift; };
@@ -48,7 +51,7 @@ $(bold && undl)USAGE$(reset)
 $(bold && undl)SUMMARY$(reset)
 
   Attempts to resolve the given command to an absolute path.
-  Similar to $(ital && bold && cyn)which$(reset) and $(ital && bold && cyn)type$(reset) in terms of functionality.
+  Similar to $(ital && bold && cyn)type -t$(reset) and $(ital && bold && cyn)type$(reset) in terms of functionality.
 
   In silent mode it returns 0 if found, or 1 if not found.
   If the flags $(ital && bold && ylw)--verbose$(reset) or $(ital && bold && ylw)-v$(reset) are provided, it will print
@@ -63,9 +66,9 @@ USAGE
     return 1;
   else
     if [ -n "$verbose" ]; then
-      command -v which >&/dev/null && which "$@" 2>&1 || type -a "$@" 2>&1
+      command -v type -t &>/dev/null && type -t "$@" 2>&1 || \command -V "$@" 2>&1
     else
-      command -v which >&/dev/null && return 0 || return 1;
+      command -v type -t &>/dev/null && return 0 || return 1;
       return $?
     fi
   fi
@@ -102,12 +105,7 @@ function pbkey() {
 }
 
 # jq functions for da jsonz
-if which jq >&/dev/null; then
-	function json() {
-    local script dir
-    script="${1:-.}"
-		jq "${script:-.}" "${dir:-.}"/*.json
-	}
+if type -t jq &>/dev/null; then
 	function pkgjson() {
 		jq "${1:-.}" "${2:-./package.json}"
 	}
@@ -117,7 +115,7 @@ if which jq >&/dev/null; then
 fi
 
 # GitHub CLI Helpers
-if which gh >&/dev/null; then
+if type -t gh &>/dev/null; then
 	function gists() {
 		gh gist list -L "${1:-100}"
 	}
@@ -145,19 +143,15 @@ alias "git-commit"="commit"
 
 # Create a new directory and enter it
 function mkd() {
-	mkdir -p "$@"
-	cd "$@" || exit
+	\command \mkdir -p "$@"
+	\command \cd "$@" || exit
 }
 
 # Make a temporary directory and enter it
 function tmpd() {
 	local dir
-	if [ $# -eq 0 ]; then
-		dir=$(mktemp -d)
-	else
-		dir=$(mktemp -d -t "${1}.XXXXXXXXXX")
-	fi
-	cd "$dir" || exit
+	if [ $# -eq 0 ]; then dir=$(mktemp -d); else dir=$(mktemp -d -t "${1}.XXXXXXXXXX"); fi
+	\command \cd "$dir" || exit
 }
 
 # Create a .tar.gz archive, using `zopfli`, `pigz` or `gzip` for compression
@@ -190,24 +184,20 @@ function targz() {
 
 # Determine size of a file or total size of a directory
 function fs() {
-	if du -b /dev/null > /dev/null 2>&1; then
+	if du -b /dev/null &>/dev/null; then
 		local arg=-sbhLc
 	else
 		local arg=-shLc
 	fi
 	# shellcheck disable=SC2199
-	if [[ -n "$@" ]]; then
-		du $arg -- "$@"
-	else
-		du $arg -- .[^.]* *
-	fi
+	if [ -n "$@" ]; then du $arg -- "$@"; else du $arg -- .[^.]* *; fi
 }
 
 # Use Git’s colored diff when available
 function gitdiff() {
 	local DIFF_OPTIONS="--color=auto --side-by-side"
 
-	if which git > /dev/null 2>&1; then
+	if type -t git &>/dev/null; then
 		git diff "$DIFF_OPTIONS" --no-index --color-words "$@"
 	else
 		diff "$DIFF_OPTIONS" --color-words "$@"
@@ -217,34 +207,51 @@ alias diff=gitdiff
 
 # Create a data URL from a file
 function dataurl() {
-	local nocopy mimeType charSet data
+	local arg nocopy mimeType charSet data verbose
 	nocopy=0
-	mimeType="image/svg+xml"
+  verbose=0
+  mimeType=""
 	charSet="utf-8"
 
-	[ "$1" = "-c" ] && {
-		nocopy=1
-		shift
-	}
+  while (($# > 0)); do
+    arg="$(echo -n "${1-}" | tr '[:lower:]' '[:upper:]')"
+    case "$arg" in
+      # copy to clipboard
+      -c|--copy)
+        nocopy=0; shift;;
+      # do not copy to clipboard
+      -C|--no-copy)
+        nocopy=1; shift;;
+      # user supplied mime-type
+      -m|-t|--mime|--type)
+        [ -n "${2-}" ] && { mimeType="${2-}"; shift; }; shift;;
+      # verbosity
+      -[Vv]|--verbose) verbose=1; shift;;
+    esac # case
 
-	if [[ -f "$1" ]]; then
-		mimeType=$(file -b --mime-type "$1")
-	elif [[ -d "$1" ]]; then
-		echo "Cannot coerce a directory into a file." && return 1
-	fi
+    # infer the mime type otherwise
+  	if [ -z "$mimeType" ]; then
+      if [ -f "$1" ]; then
+        mimeType=$(file -b --mime-type "$1")
+      elif [[ -d "$1" ]]; then
+        [ "$verbose" = 1 ] && echo "Cannot coerce a directory into a file.";
+        return 1
+      fi
+    fi
+    continue
+  done
 
 	# shellcheck disable=SC2002
 	printf -v data "data:%s;%sbase64,%s" "${mimeType:-"text/plain"}" "${charSet:+"charset=$charSet;"}" "$(cat "$1" | base64 | tr -d '\n')"
-	[ -z "$data" ] && {
-		echo "Failed constructing the dataurl string."
-		return 2
-	}
-	[ $nocopy = 1 ] && {
-		echo -n "$data"
-		return 0
-	}
-	echo -n "$data" | pbcopy 2> /dev/null \
-		&& echo "Created dataurl and copied to clipboard."
+	if [ -z "$data" ]; then
+    echo "Failed constructing the dataurl string."; return 2;
+  fi
+
+  if [ "$nocopy" = 1 ]; then echo -n "$data"; return 0; fi
+
+	echo -n "$data" | pbcopy 2>/dev/null && {
+		[ "$verbose" = 1 ] && echo "Created dataurl and copied to clipboard."; return 0;
+  } || echo -n "$data"; return 0;
 }
 
 # Start an HTTP server from a directory, optionally specifying the port
@@ -264,24 +271,6 @@ function gz() {
 	ratio=$(echo "$gzipsize * 100 / $origsize" | bc -l)
 	printf "orig: %d bytes\\n" "$origsize"
 	printf "gzip: %d bytes (%2.2f%%)\\n" "$gzipsize" "$ratio"
-}
-
-# Syntax-highlight JSON strings or files
-# Usage: `json '{"foo":42}'` or `echo '{"foo":42}' | json`
-function json() {
-	if which -s jq && ! which -s pygmentize; then
-		if [ -t 0 ]; then
-			jq '.' <<< "$*"
-		else
-			jq '.' -
-		fi
-	else
-		if [ -t 0 ]; then # argument
-			python -mjson.tool <<< "$*" | pygmentize -l javascript
-		else # pipe
-			python -mjson.tool | pygmentize -l javascript
-		fi
-	fi
 }
 
 # Run `dig` and display the most useful info
@@ -327,9 +316,9 @@ function codepoint() {
 # given location
 function v() {
 	if [ $# -eq 0 ]; then
-		$(which nvim 2>/dev/null || which vim) .
+		$(type -t nvim 2>/dev/null || type -t vim) .
 	else
-		$(which nvim 2>/dev/null || which vim) "$@"
+		$(type -t nvim 2>/dev/null || type -t vim) "$@"
 	fi
 }
 
@@ -337,9 +326,9 @@ function v() {
 # location
 function o() {
 	if (($# > 0)); then
-		open "@" > /dev/null 2>&1
+		open "@" &>/dev/null
 	else
-		open . > /dev/null 2>&1
+		open . &>/dev/null
 	fi
 }
 
@@ -362,7 +351,7 @@ function l () {
 		[ -e "$1" ] && { path="${1-}"; shift 1; };
 	fi
 	if [ -d "${path:-.}" ]; then
-		if type -t ll >&/dev/null; then
+		if type -t ll &>/dev/null; then
 						ll "$@" "${path:-.}"
 		else
 						command ls -FAgoHhksG "$@" "${path:-.}"
@@ -379,61 +368,6 @@ function l () {
 function tre() {
 	tree -aC -I '.git' --dirsfirst "$@" | less -FRNX
 }
-
-# Call from a local repo to open the repository on github/bitbucket in browser
-# Modified version of https://github.com/zeke/ghwd
-function gitrepo() {
-	# Figure out github repo base URL
-	local base_url
-	base_url=$(git config --get remote.origin.url)
-	base_url=${base_url%\.git} # remove .git from end of string
-
-	# Fix git@github.com: URLs
-	base_url=${base_url//git@github\.com:/https:\/\/github\.com\/}
-
-	# Fix git://github.com URLS
-	base_url=${base_url//git:\/\/github\.com/https:\/\/github\.com\/}
-
-	# Fix git@bitbucket.org: URLs
-	base_url=${base_url//git@bitbucket.org:/https:\/\/bitbucket\.org\/}
-
-	# Fix git@gitlab.com: URLs
-	base_url=${base_url//git@gitlab\.com:/https:\/\/gitlab\.com\/}
-
-	# Validate that this folder is a git folder
-	if ! git branch 2> /dev/null 1>&2; then
-		echo "Not a git repo!"
-		exit $?
-	fi
-
-	# Find current directory relative to .git parent
-	full_path=$(pwd)
-	git_base_path=$(
-		cd "./$(git rev-parse --show-cdup)" || exit 1
-		pwd
-	)
-	relative_path="${full_path#"$git_base_path"}" # remove leading git_base_path from working directory
-
-	# If filename argument is present, append it
-	if [ -n "$1" ]; then
-		relative_path="$relative_path/$1"
-	fi
-
-	# Figure out current git branch
-	# git_where=$(command git symbolic-ref -q HEAD || command git name-rev --name-only --no-undefined --always HEAD) 2>/dev/null
-	git_where=$(command git name-rev --name-only --no-undefined --always HEAD) 2> /dev/null
-
-	# Remove cruft from branchname
-	branch="${git_where#refs\/heads\/}"
-
-	[[ $base_url == *bitbucket* ]] && tree="src" || tree="tree"
-	url="$base_url/$tree/$branch$relative_path"
-
-	echo "Calling $(type open) for $url"
-
-	open "$url" &> /dev/null || (echo "Using $(type open) to open URL failed." && exit 1)
-}
-#alias repo=gitrepo;
 
 # Get colors in manual pages
 function __mancolors() {
@@ -474,24 +408,4 @@ function __morecolors() {
 	more --use-color "$@"
 }
 alias more=__morecolors
-
-########
-## functions used in .path to amend the $PATH variable
-########
-function get_var() {
-	eval 'printf "%s\n" "${'"$1"'}"'
-}
-
-function set_var() {
-	eval "$1=\"\$2\""
-}
-
-function dedupe_path() {
-	local pathvar_value deduped_path
-	pathvar_value="${1:-$PATH}"
-	deduped_path="$(perl -e 'print join(":",grep { not $seen{$_}++ } split(/:/, $ARGV[0]))' "$pathvar_value")"
-	# set_var "$pathvar_name" "$deduped_path"
-	echo -n "$deduped_path" && return 0
-	return 1 # still error? errrrrr
-}
 

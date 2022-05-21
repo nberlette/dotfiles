@@ -7,4 +7,4 @@ if [ "$SHLVL" = 1 ]; then
   fi # clear_console
 fi
 
-unset -v DOTFILES_INITIALIZED &>/dev/null
+unset -v DOTFILES_INITIALIZED DOTFILES_CORE_INITIALIZED &>/dev/null

@@ -6,3 +6,5 @@ if [ "$SHLVL" = 1 ]; then
     then /usr/bin/clear_console -q 2>/dev/null
   fi # clear_console
 fi
+
+unset -v DOTFILES_INITIALIZED &>/dev/null

@@ -12,7 +12,7 @@
 shell="$(which bash)"
 export SHELL="$shell"
 
-if [ -z "${DOTFILES_INITIALIZED:+x}" ]; then
+# if [ -z "${DOTFILES_INITIALIZED:+x}" ]; then
   # source the .path file to make sure all programs and functions are accessible
   # this also sources our core.sh file. and if it cant be found, it fails. HARD.
   if [ -r ~/.path ]; then {
@@ -64,5 +64,5 @@ if [ -z "${DOTFILES_INITIALIZED:+x}" ]; then
   eval "$(starship init "$(basename -- "$SHELL")")"
 
   # define our variable to indicate this file has already been executed
-  export DOTFILES_INITIALIZED=1
-fi
+  # export DOTFILES_INITIALIZED=1
+# fi

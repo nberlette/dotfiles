@@ -14,6 +14,13 @@ sudo -v
 # default level is --quiet , in CI/CD --verbose
 verbosity="--quiet"
 
+# always ebable verbose logging if in CI/CD
+[ -n "${CI:+x}" ] && verbosity="--verbose"
+
+function ostype() {
+  echo "$(uname -s | tr '[:upper:]' '[:lower:]' 2>/dev/null)"
+}
+
 # $OSTYPE variable (linux-gnu, darwin, etc)
 [ -z "${OSTYPE:+x}" ] && OSTYPE=$(ostype)
 
@@ -48,8 +55,10 @@ fi
 
 export TZ='America/Los_Angeles'
 export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
+
 DOTFILES_LOG="${DOTFILES_PREFIX-}/_installs/$(date +%F)-$(date +%s)/install.log"
 DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
+
 [ -d "$DOTFILES_LOGPATH" ] || mkdir -p "$DOTFILES_LOGPATH" &>/dev/null;
 
 DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup/"
@@ -60,13 +69,6 @@ DOTFILES_CORE="$(curdir 2>/dev/null || echo -n $DOTFILES_PREFIX)/.bashrc.d/core.
 
 cd "$(dirname -- "$(curdir)")" 2>/dev/null;
 
-# always ebable verbose logging if in CI/CD
-[ -n "${CI:+x}" ] && verbosity="--verbose"
-
-function ostype() {
-  uname -s | tr '[:upper:]' '[:lower:]' 2>/dev/null
-}
-
 function print_banner () {
   local message divider i
   case "${1-}" in
@@ -74,17 +76,17 @@ function print_banner () {
       printf '\033[1;2;4m(%d/%d)\033[0m \033[1m%s\033[0m\n\n' "$STEP_NUM" "$STEP_TOTAL" "${*:2}"
     ;;
     *)
-        divider="" divider_char="-"
-        if [[ ${#1} == 1 && -n "$2" ]]; then
-          divider_char="${1:-"-"}"
-          message="${*:2}"
-        else
-          message="${*:-"Beginning dotfiles installation"}"
-        fi
-        for ((i=0;$i<${COLUMNS:-100};i++)); do
-          divider+="${divider_char:-"="}"
-        done
-        printf '\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
+      divider="" divider_char="-"
+      if [[ ${#1} == 1 && -n "$2" ]]; then
+        divider_char="${1:-"-"}"
+        message="${*:2}"
+      else
+        message="${*:-"Beginning dotfiles installation"}"
+      fi
+      for ((i=0;$i<${COLUMNS:-100};i++)); do
+        divider+="${divider_char:-"="}"
+      done
+      printf '\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
     ;;
   esac
 }
@@ -117,17 +119,14 @@ function setup_brew() {
     # brew reinstall "${verbosity-}" coreutils starship gh shfmt;
   } | tee -a "$DOTFILES_LOG" 2>&1
 
-  local REPLY;
   # don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)
   # otherwise this usually takes > 120s and fails hard thanks to gitpod's rather unreasonable time limit.
   # also, skip this step if we're in CI/CD (github actions), because... money reasons.
   if [ -z "${CI:+x}" ] && [ -t 0 ]; then
-    read -n 1 -i n -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m \033[1;33mInstall/update core utilities like git, go, docker, bash, etc.?\033[0m\n\n\033[0;2m(might add 5+ minutes to install)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;3m / \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+    read -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m \033[1;33mInstall/update core utilities like git, go, docker, bash, etc.?\033[0m\n\n\033[0;2m(might add 5+ minutes to install)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;3m / \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
     local prompt_status=$?; echo '';
 
-    if (($prompt_status > 128)); then REPLY=n; fi
-
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if [[ $REPLY =~ ^[Yy]$ ]] || (($prompt_status > 128)); then
       # install some essentials
       {
         brew install "${verbosity-}" --overwrite \
@@ -164,12 +163,10 @@ function setup_brew() {
         export SHELL="${HOMEBREW_PREFIX:-}/bin/bash";
 
         # if interactive and on macOS, we're probably on a macbook / iMac desktop. so add casks. (apps)
-          read -n 1 -i n -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m \033[1;33mInstall or upgrade \033[3;4mall\033[0;1;33m macOS apps, addons, and fonts?\033[0m\n\n\033[0;2m(could take up to ten minutes to complete)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... ';
+          read -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m \033[1;33mInstall or upgrade \033[3;4mall\033[0;1;33m macOS apps, addons, and fonts?\033[0m\n\n\033[0;2m(could take up to ten minutes to complete)\n\n\033[0;2m(\033[0;1;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... ';
           local prompt_status=$?; echo '';
 
-          if (($prompt_status > 128)); then REPLY=n; fi
-
-          if [[ $REPLY =~ ^[Yy]$ ]]; then
+          if [[ $REPLY =~ ^[Yy]$ ]] || (($prompt_status > 128)); then
             brew install --quiet python3 fontforge ;
             brew install --quiet --cask iterm2;
             curl -fsSL https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash -;
@@ -209,14 +206,12 @@ function setup_node() {
     fi
   } | tee -a "$DOTFILES_LOG" 2>&1
 
-   global_add zx @brlt/n @brlt/prettier prettier @brlt/eslint-config eslint @brlt/utils degit
-  local REPLY;
-  read -n 1 -i n -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m\033[1;33mInstall CLIs for Vercel/Railway/Netlify/Cloudflare?\033[0m\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+  global_add zx @brlt/n @brlt/prettier prettier @brlt/eslint-config eslint @brlt/utils degit
+
+  read -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m\033[1;33mInstall CLIs for Vercel/Railway/Netlify/Cloudflare?\033[0m\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
   local prompt_status=$?; echo '';
 
-  if (($prompt_status > 128)); then REPLY=n; fi
-
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
+  if [[ $REPLY =~ ^[Yy]$ ]] || (($prompt_status > 128)); then
     global_add dotenv-vault vercel wrangler@latest miniflare@latest @railway/cli netlify-cli
   fi
 
@@ -241,8 +236,8 @@ function setup_home() {
 
   # .gitignore and .gitconfig are special!
   # we have to rename them to avoid issues with git applying them to the repository
-  rsync -avh --mkpath --backup --backup-dir=$backupdir --whole-file gitignore ~/.gitignore | tee -a "$DOTFILES_LOG"
-  rsync -avh --mkpath --backup --backup-dir=$backupdir --whole-file gitconfig ~/.gitconfig | tee -a "$DOTFILES_LOG"
+  rsync -avh --mkpath --backup --backup-dir=$backupdir --whole-file gitignore ~/.gitignore | tee -a "$DOTFILES_LOG" 2>&1
+  rsync -avh --mkpath --backup --backup-dir=$backupdir --whole-file gitconfig ~/.gitconfig | tee -a "$DOTFILES_LOG" 2>&1
 
   return 0
 }
@@ -270,13 +265,11 @@ function main() {
 
   # if we are in interactive mode, and not forcing, ask the user if they want to proceed
   if [ -t 0 ] && [ -z "$CI" ]; then
-    local REPLY;
-    read -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0;1;31m DANGER \033[0m ·  \033[3;31mContinuing with install will overwrite existing files in \033[3;4m'"$HOME"$'\033[0;3;31m.\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (respond within 30s or \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;3m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+    read -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0;1;31m DANGER \033[0m ·  \033[3;31mContinuing with install will overwrite existing files in \033[3;4m'"$HOME"$'\033[0;3;31m.\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (respond within 30s or \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
     local prompt_status=$?; echo '';
 
-    if (($prompt_status > 128)); then REPLY=y; fi
     # if the user says yes, or force, run the install
-    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+    if [[ "$REPLY" =~ ^[Yy]$ ]] || (($prompt_status > 128)); then
       setup_home && print_step_complete && return 0
     else
       echo -e '\n\033[1;31mAborted.\033[0m' && exit 1
@@ -297,7 +290,7 @@ function cleanup_env () {
 }
 
 # run it and clean up after!
-main "$@" && {
+main "$@" | tee -a "$DOTFILES_LOG" 2>&1 && {
   cleanup_env && unset -f cleanup_env;
   exit 0;
 } || exit $?

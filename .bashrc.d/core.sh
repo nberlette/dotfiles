@@ -7,7 +7,7 @@
 ##  https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/core.sh       ##
 ## ------------------------------------------------------------------------ ##
 
-if [ -z "${DOTFILES_CORE_INITIALIZED:+x}" ]; then
+# if [ -z "${DOTFILES_CORE_INITIALIZED:+x}" ]; then
 
   # src - source multiple files or entire folders recursively, with sanity checks.
   function src() {
@@ -122,5 +122,5 @@ if [ -z "${DOTFILES_CORE_INITIALIZED:+x}" ]; then
     }
   }
 
-  export DOTFILES_CORE_INITIALIZED=1
-fi
+  # export DOTFILES_CORE_INITIALIZED=1
+# fi

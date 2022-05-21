@@ -99,8 +99,6 @@ function dedupe_path() {
     && echo -n "$deduped_path";
 }
 
-
-
 # installs all arguments as global packages
 function global_add() {
   local pkg pkgs=("$@") agent=npm command="i -g"

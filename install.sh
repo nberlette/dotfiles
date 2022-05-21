@@ -53,6 +53,28 @@ if ! type curdir &>/dev/null; then
   }
 fi
 
+if ! type global_add &>/dev/null; then
+  # installs all arguments as global packages
+  function global_add() {
+    local pkg pkgs=("$@") agent=npm command="i -g"
+    if which pnpm &>/dev/null; then
+      agent=pnpm; command="add -g";
+    elif which yarn &>/dev/null; then
+      agent=yarn; command="global add";
+    else
+      agent=npm; command="i -g";
+    fi
+    $agent $command "${pkgs[@]}" &>/dev/null && {
+      echo "Installed with $agent:"
+      for pkg in "${pkgs[@]}"; do
+        echo -e "\\033[1;32m ✓ $pkg \\033[0m"
+        # || echo -e "\\033[1;48;2;230;30;30m 𐄂 ${pkg-}\\033[0m";
+      done
+    }
+  }
+
+fi
+
 export TZ='America/Los_Angeles'
 export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 
@@ -64,9 +86,9 @@ DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
 DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup/"
 mkdir -p $DOTFILES_BACKUP_PATH &>/dev/null
 
-DOTFILES_CORE="$(curdir 2>/dev/null || echo -n "${DOTFILES_PREFIX:-"$HOME/.dotfiles"}")/.bashrc.d/core.sh"
+DOTFILES_CORE=~/.bashrc.d/core.sh
 
-[ -f "$DOTFILES_CORE" ] && source "$DOTFILES_CORE"
+[ -r "$DOTFILES_CORE" ] && . "$DOTFILES_CORE"
 
 cd "$(dirname -- "$(curdir)")" 2>/dev/null;
 

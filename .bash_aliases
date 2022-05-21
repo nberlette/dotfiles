@@ -7,7 +7,7 @@
 ## ------------------------------------------------------------------------ ##
 
 # make sure our .bin dir is in the PATH
-if ! type osc &>/dev/null; then
+if ! type -p osc &>/dev/null; then
   export PATH="$HOME/.bin:${DOTFILES_PREFIX:-"$HOME/.dotfiles/.bin"}:$PATH"
 fi
 
@@ -39,27 +39,84 @@ alias cyn_b="osc 01 46"
 alias wht_b="osc 48 02 255 255 255"
 
 case "$(uname -s)" in
-    Darwin)
-        # Mac specific aliases
-        colorflag="-G --color=always"
-        export COLORTERM=1
-        export CLICOLOR_FORCE=$COLORTERM
-        export FORCE_COLOR=1
-        alias rebash="source \$HOME/.bash_profile"
-        ;;
-    Linux)
-        colorflag="--color=always"
-        export COLORTERM=1
-        export CLICOLOR_FORCE=$COLORTERM
-        export FORCE_COLOR=1
-        if ! which xclip >&/dev/null; then
-            brew install xclip >&/dev/null
+  Darwin)
+    # Mac specific aliases
+    colorflag="-G --color=always"
+    export COLORTERM=1
+    export CLICOLOR_FORCE=$COLORTERM
+    export FORCE_COLOR=1
+    alias rebash="source \$HOME/.bash_profile"
+
+
+    # visual studio code
+    VSCODE_INSIDERS="/Applications/Visual Studio Code - Insiders.app"
+    VSCODE_RELEASE="/Applications/Visual Studio Code.app"
+    # shellcheck disable=SC2139
+    {
+        if [ -e "$VSCODE_INSIDERS" ]; then
+            alias code="open -a \"$VSCODE_INSIDERS\""
+        elif [ -e "$VSCODE_RELEASE" ]; then
+            alias code="open -a \"$VSCODE_RELEASE\""
         fi
-        alias pbcopy='xclip -selection clipboard'
-        alias pbpaste='xclip -selection clipboard -o'
-        alias open="xdg-open"
-        alias rebash="source \$HOME/.bashrc"
-        ;;
+    }
+
+    # finder.app
+    alias finder="open -a '/System/Library/CoreServices/Finder.app'"
+
+    # google chrome
+    if ! which chrome &>/dev/null && [ -e "/Applications/Google Chrome.app" ]; then
+      alias chrome="open -a '/Applications/Google Chrome.app'"
+
+      # Kill all the tabs in Chrome to free up memory
+      # [C] explained: http://www.commandlinefu.com/commands/view/402/exclude-grep-from-your-grepped-output-of-ps-alias-included-in-description
+      alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
+    fi
+
+    # iTerm2 (iTerm.app)
+    if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
+      if type -t it2setcolor &>/dev/null; then
+        # change to 'Dark Background' preset theme
+        alias godark="it2setcolor preset 'Dark Background'"
+        alias darkmode="godark"
+
+        # change to 'Light Background' preset theme
+        alias golight="it2setcolor preset 'Light Background'"
+        alias lightmode="golight"
+
+        # change to [ theme name ] preset theme
+        alias itheme="it2setcolor preset"
+        alias themeit="it2setcolor preset"
+        alias it2="it2setcolor preset"
+
+        # change current tab's background color
+        alias itab="it2setcolor tab"
+        alias tabit="it2setcolor tab"
+        alias tabcolor="it2setcolor tab"
+      fi
+      # for macbook pro touchbar models
+      if type -t it2setkeylabel &>/dev/null; then
+        alias itouch="it2setkeylabel"
+        alias touchbar="it2setkeylabel"
+        alias touchpush="it2setkeylabel push"
+        alias touchpop="it2setkeylabel pop"
+        alias touchset="it2setkeylabel set"
+        alias statuskey="it2setkeylabel set status"
+      fi
+    fi
+  ;;
+  Linux)
+    colorflag="--color=always"
+    export COLORTERM=1
+    export CLICOLOR_FORCE=$COLORTERM
+    export FORCE_COLOR=1
+    if ! type -t xclip &>/dev/null; then
+        brew install xclip &>/dev/null
+    fi
+    alias pbcopy='xclip -selection clipboard'
+    alias pbpaste='xclip -selection clipboard -o'
+    alias open="xdg-open"
+    alias rebash="source \$HOME/.bashrc"
+  ;;
 esac
 
 # @deprecated
@@ -114,10 +171,10 @@ alias -- -="cd -"
 alias dl="cd ~/Downloads"
 alias g="git"
 alias h="history"
-alias gc='. $(which gitdate) && git commit -v '
+alias gc='. $(type -t gitdate) && git commit -v '
 
 # Always use color output for `ls`
-if which gls &>/dev/null; then
+if type -t gls &>/dev/null; then
   # shellcheck disable=SC2139
   alias ls="command gls ${colorflag-}"
 else
@@ -161,22 +218,22 @@ alias sniff="sudo ngrep -d 'en1' -t '^(GET|POST) ' 'tcp and port 80'"
 alias httpdump="sudo tcpdump -i en1 -n -s 0 -w - | grep -a -o -E \"Host\\: .*|GET \\/.*\""
 
 # Canonical hex dump; some systems have this symlinked
-type -p hexdump >&/dev/null \
+type -p hexdump &>/dev/null \
                             && command -v hd > /dev/null || alias hd="hexdump -C"
 
 # OS X has no `md5sum`, so use `md5` as a fallback
-type -p md5 >&/dev/null \
+type -p md5 &>/dev/null \
                         && command -v md5sum > /dev/null || alias md5sum="md5"
 
 # OS X has no `sha1sum`, so use `shasum` as a fallback
-type -p shasum >&/dev/null \
+type -p shasum &>/dev/null \
                            && command -v sha1sum > /dev/null || alias sha1sum="shasum"
 
 # Trim new lines and copy to clipboard
 alias trc="tr -d '\\n' | pbcopy"
 
 # URL-encode strings
-if type -p python >&/dev/null; then
+if type -p python &>/dev/null; then
     alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
 fi
 
@@ -185,7 +242,7 @@ fi
 # find . -name .gitattributes | map dirname
 alias map="xargs -n1"
 
-if which lwp-request >&/dev/null; then
+if type -t lwp-request &>/dev/null; then
     # One of @janmoesen’s ProTip™s
     for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
         # shellcheck disable=SC2139,SC2140
@@ -193,7 +250,7 @@ if which lwp-request >&/dev/null; then
     done
 fi
 
-if type -t i3lock >&/dev/null; then
+if type -t i3lock &>/dev/null; then
     # Lock the screen (when going AFK)
     alias afk="i3lock -c 000000"
 fi
@@ -243,53 +300,28 @@ alias ln='ln -v'
 alias "cd.."="cd .."
 alias t='touch'
 
+# git
 alias gitignore='git ignore'
 alias ignore='git ignore'
 alias gitingore='git ignore'
 alias ingore='git ignore'
 
-alias prisma='pnpx prisma'
-alias next='pnpx next'
-alias sk='pnpx svelte-kit'
-alias ska='pnpx svelte-add'
-alias degit='pnpx degit'
+# ruby hack
 alias gem='sudo gem'
 
+# terrible names
 alias pig='pnpm i -g'
 alias nig='npm i -g'
+alias yag='yarn global add'
 
 # shellcheck source=/dev/null
-alias pip2='/usr/local/bin/pip'
+alias pip2="$(type -t pip)"
 alias pip='pip3'
 alias python='python3'
 alias venv="source '\$HOME/.venv/bin/activate'"
 
-alias bold="osc 01"
-alias undl="osc 04"
-alias ital="osc 03"
-alias dark="osc 02"
-alias flsh="osc 05"
-alias inv="osc 07"
-alias reset="osc 00"
-alias blk="osc 38 02 00 00 00"
-alias red="osc 01 31"
-alias grn="osc 01 32"
-alias ylw="osc 01 33"
-alias blu="osc 01 34"
-alias mag="osc 01 35"
-alias cyn="osc 01 36"
-alias wht="osc 38 02 255 255 255"
-alias gry="osc 37"
-alias blk_b="osc 48 02 00 00 00"
-alias red_b="osc 01 41"
-alias grn_b="osc 01 42"
-alias ylw_b="osc 01 43"
-alias blu_b="osc 01 44"
-alias mag_b="osc 01 45"
-alias cyn_b="osc 01 46"
-alias wht_b="osc 48 02 255 255 255"
-
-if which yarn >&/dev/null; then
+# YARN PACKAGE MANAGER
+if type -t yarn &>/dev/null; then
     alias yarn="yarn --ignore-optional --ignore-platform --ignore-engines -s"
     alias yag='yarn global add'
     alias yg='yarn global'
@@ -301,20 +333,23 @@ if which yarn >&/dev/null; then
     alias yporn='yarn --prefer-offline' # ynot?
 fi
 
-if which node >&/dev/null; then
+# NODE.JS
+if type -t node &>/dev/null; then
     # node flags / options / etc.
     NODE_FLAGS=${NODE_FLAGS:-"--experimental-import-meta-resolve --experimental-json-modules --experimental-repl-await --experimental-specifier-resolution=node --experimental-vm-modules --max-old-space-size=4096 "} # --no-warnings --no-warnings-experimental-mode
     alias esnode="node --trace-warnings \$NODE_FLAGS"
     alias nodetsm="node --loader tsm -r dotenv/config \$NODE_FLAGS"
 fi
 
-if which flarectl >&/dev/null; then
+# CLOUDFLARE: flarectl CLI
+if type -t flarectl &>/dev/null; then
     alias flare="flarectl"
     alias cf=flarectl
     alias railgun="flarectl railgun"
 fi
 
-if which wrangler >&/dev/null; then
+# CLOUDFLARE: wrangler CLI
+if type -t wrangler &>/dev/null; then
     alias wr="wrangler"
     alias pages="wrangler pages"
     alias r2="wrangler r2"
@@ -323,7 +358,7 @@ if which wrangler >&/dev/null; then
     alias kvbulk="wrangler kv:bulk"
 fi
 
-if which nvim > /dev/null 2>&1; then
+if type -t nvim > /dev/null 2>&1; then
     alias vim="nvim"
     alias vi="nvim"
     alias v="nvim"
@@ -334,7 +369,7 @@ else
 fi
 
 # aws aliases
-if which aws >&/dev/null; then
+if type -t aws &>/dev/null; then
     alias ls3='aws s3 ls --human-readable --summarize'
     alias rls3='aws s3 ls --recursive'
 
@@ -349,7 +384,7 @@ if which aws >&/dev/null; then
     unset -v aws_cmd
 fi
 
-if ! hash docker >&/dev/null; then
+if ! hash docker &>/dev/null; then
     alias dk='docker'
     alias dkit='docker -it'
     alias dkr='docker run -it'
@@ -360,7 +395,7 @@ if ! hash docker >&/dev/null; then
 fi
 
 # GitHub CLI commands and shorthands
-if type gh >&/dev/null; then
+if type gh &>/dev/null; then
     alias mkgist="gh gist create"
     alias rmgist="gh gist delete"
     alias gisted='gh gist edit'
@@ -370,64 +405,4 @@ if type gh >&/dev/null; then
     alias reponew='gh repo create'
     alias newrepo='gh repo create'
     alias mkrepo='gh repo create'
-fi
-
-# macOS (darwin) application shortcuts
-if [[ "$(uname -s)" == "Darwin" ]]; then
-
-    # visual studio code
-    VSCODE_INSIDERS="/Applications/Visual Studio Code - Insiders.app"
-    VSCODE_RELEASE="/Applications/Visual Studio Code.app"
-    # shellcheck disable=SC2139
-    {
-        if [ -e "$VSCODE_INSIDERS" ]; then
-            alias code="open -a \"$VSCODE_INSIDERS\""
-        elif [ -e "$VSCODE_RELEASE" ]; then
-            alias code="open -a \"$VSCODE_RELEASE\""
-        fi
-    }
-
-    # finder.app
-    alias finder="open -a '/System/Library/CoreServices/Finder.app'"
-
-    # google chrome
-    if ! which chrome >&/dev/null && [ -e "/Applications/Google Chrome.app" ]; then
-        alias chrome="open -a '/Applications/Google Chrome.app'"
-
-        # Kill all the tabs in Chrome to free up memory
-        # [C] explained: http://www.commandlinefu.com/commands/view/402/exclude-grep-from-your-grepped-output-of-ps-alias-included-in-description
-        alias chromekill="ps ux | grep '[C]hrome Helper --type=renderer' | grep -v extension-process | tr -s ' ' | cut -d ' ' -f2 | xargs kill"
-    fi
-
-    # iTerm2 (iTerm.app)
-    if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-        if type -t it2setcolor >&/dev/null; then
-            # change to 'Dark Background' preset theme
-            alias godark="it2setcolor preset 'Dark Background'"
-            alias darkmode="godark"
-
-            # change to 'Light Background' preset theme
-            alias golight="it2setcolor preset 'Light Background'"
-            alias lightmode="golight"
-
-            # change to [ theme name ] preset theme
-            alias itheme="it2setcolor preset"
-            alias themeit="it2setcolor preset"
-            alias it2="it2setcolor preset"
-
-            # change current tab's background color
-            alias itab="it2setcolor tab"
-            alias tabit="it2setcolor tab"
-            alias tabcolor="it2setcolor tab"
-        fi
-        # for macbook pro touchbar models
-        if type -t it2setkeylabel >&/dev/null; then
-            alias itouch="it2setkeylabel"
-            alias touchbar="it2setkeylabel"
-            alias touchpush="it2setkeylabel push"
-            alias touchpop="it2setkeylabel pop"
-            alias touchset="it2setkeylabel set"
-            alias statuskey="it2setkeylabel set status"
-        fi
-    fi
 fi

@@ -27,8 +27,8 @@ function ostype() {
 # $IS_DARWIN=1 if on a Mac
 [[ "$OSTYPE" == [Dd]arwin* ]] && IS_DARWIN=1 || IS_DARWIN=0
 
-# $IS_INTERACTIVE=1 if interactive, 0 otherwise
-# (like in CI/CD, or Gitpod autoinstall during prebuilds)
+# IS_INTERACTIVE=1 if interactive, 0 otherwise (duh)
+# (like in CI/CD, or Codespaces/Gitpod autoinstall during prebuilds)
 [ -t 0 ] && IS_INTERACTIVE=1;
 case $- in *i*) IS_INTERACTIVE=1;; esac
 
@@ -79,10 +79,10 @@ export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 
 DOTFILES_LOG="$DOTFILES_PREFIX/_installs/$(date +%F)-$(date +%s)/install.log"
 DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
-sudo mkdir -p "$DOTFILES_LOGPATH" &>/dev/null
+mkdir -p "$DOTFILES_LOGPATH" &>/dev/null
 
 DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup/"
-sudo mkdir -p "$DOTFILES_BACKUP_PATH" &>/dev/null
+mkdir -p "$DOTFILES_BACKUP_PATH" &>/dev/null
 
 DOTFILES_CORE="$DOTFILES_PREFIX"/.bashrc.d/core.sh
 
@@ -139,7 +139,7 @@ function setup_brew() {
 
     brew install "${verbosity-}" --overwrite rsync coreutils gh git-extras
     # brew reinstall "${verbosity-}" coreutils starship gh shfmt;
-  } | tee -a "$DOTFILES_LOG" 2>&1
+  } | tee -i -a "$DOTFILES_LOG" 2>&1
 
   # don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)
   # otherwise this usually takes > 120s and fails hard thanks to gitpod's rather unreasonable time limit.
@@ -173,7 +173,7 @@ function setup_brew() {
         if command -v gem &>/dev/null; then
           gem install jekyll bundler 2>/dev/null
         fi
-      } | tee -a "$DOTFILES_LOG" 2>&1
+      } | tee -i -a "$DOTFILES_LOG" 2>&1
     fi
 
     # for macOS
@@ -202,7 +202,7 @@ function setup_brew() {
             visual-studio-code visual-studio-code-insiders \
             google-chrome google-chrome-canary firefox firefox-nightly
         fi
-      } | tee -a "$DOTFILES_LOG" 2>&1
+      } | tee -i -a "$DOTFILES_LOG" 2>&1
     else
       brew install --quiet --overwrite gnupg2 xclip
     fi
@@ -228,7 +228,7 @@ function setup_node() {
     if ! command -v node &>/dev/null || ! node -v &>/dev/null; then
       { pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g latest; } && pnpm setup 2>/dev/null
     fi
-  } | tee -a "$DOTFILES_LOG" 2>&1
+  } | tee -i -a "$DOTFILES_LOG" 2>&1
 
   global_add zx @brlt/n @brlt/prettier prettier @brlt/eslint-config eslint @brlt/utils degit
 
@@ -256,14 +256,14 @@ function setup_home() {
   # and maintainable. +/- ~100 lines of code were replaced by 1 line... and it creates backups ;)
 
   # define exclusions with .rsyncignore; define files to copy with .rsyncinclude file
-  rsync -avh --backup --backup-dir="$backupdir" --whole-file --files-from=.rsyncfiles --exclude-from=.rsyncignore . ~ | tee -a "$DOTFILES_LOG"
+  rsync -avh --backup --backup-dir="$backupdir" --whole-file --files-from=.rsyncfiles --exclude-from=.rsyncignore . ~ | tee -i -a "$DOTFILES_LOG" 2>&1
 
   # .gitignore and .gitconfig are special!
   # we have to rename them to avoid issues with git applying them to the repository
   mv -f ~/.{gitignore,gitconfig} "$backupdir" &>/dev/null
 
-  rsync -avh --backup --backup-dir="$backupdir" --whole-file gitignore ~/.gitignore | tee -a "$DOTFILES_LOG" 2>&1
-  rsync -avh --backup --backup-dir="$backupdir" --whole-file gitconfig ~/.gitconfig | tee -a "$DOTFILES_LOG" 2>&1
+  rsync -avh --backup --backup-dir="$backupdir" --whole-file gitignore ~/.gitignore | tee -i -a "$DOTFILES_LOG" 2>&1
+  rsync -avh --backup --backup-dir="$backupdir" --whole-file gitconfig ~/.gitconfig | tee -i -a "$DOTFILES_LOG" 2>&1
 
   return 0
 }
@@ -276,10 +276,17 @@ function main() {
   print_banner "Spooling up the dotfiles installer..."
   printf ' \033[1;4m%s\033[0m: %s \n\n' 'Working Dir' "$(curdir)"
 
-  curl -sS https://starship.rs/install.sh | sh
-
-  # setup homebrew and install some packages / formulae
-  setup_brew
+  # if we are in a github codespaces environment, skip homebrew setup for now.
+  # currently the homebrew installer breaks due to a git syntax error in their code. works fine in gitpod though. 🤔
+  if [ -n "${CODESPACES+x}" ]; then
+    STEP_TOTAL=2 # adjust step total since we're skipping homebrew
+  else
+    STEP_TOTAL=3
+    # for everything else, setup homebrew and install some packages / formulae
+    setup_brew
+  fi
+  
+  { curl -sS https://starship.rs/install.sh | sh - --yes; } | tee -i -a "$DOTFILES_LOG" 2>&1
 
   # setup pnpm + node.js and install some global packages I frequently use
   # pin node.js to 16.14.2 to prevent breaking errors
@@ -296,7 +303,7 @@ function main() {
 
     # if the user says yes, or force, run the install
     if [[ "$REPLY" =~ ^[Yy]$ ]] || ((prompt_status > 128)); then
-      setup_home && print_step_complete && return 0
+      { setup_home | tee -i -a "$DOTFILES_LOG" 2>&1; } && print_step_complete && return 0;
     else
       echo -e '\n\033[1;31mAborted.\033[0m' && exit 1
     fi # $REPLY
@@ -316,7 +323,7 @@ function cleanup_env() {
 }
 
 # run it and clean up after!
-main "$@" | tee -a "$DOTFILES_LOG" 2>&1 && {
+main "$@" | tee -i -a "$DOTFILES_LOG" 2>&1 && {
   cleanup_env && unset -f cleanup_env
   exit 0
 } || exit $?

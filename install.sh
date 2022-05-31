@@ -27,16 +27,15 @@ STEP_TOTAL=3
 [ -z "${TERM:+x}" ] && export TERM="${TERM:-"xterm-color"}"
 
 # check for ostype
-if ! hash ostype &>/dev/null; then
+if ! hash ostype &> /dev/null; then
   function ostype() {
-    uname -s | tr '[:upper:]' '[:lower:]' 2>/dev/null
+    uname -s | tr '[:upper:]' '[:lower:]' 2> /dev/null
   }
 fi
 
 # check for is_interactive
-if ! hash is_interactive &>/dev/null; then
-  function is_interactive()
-  {
+if ! hash is_interactive &> /dev/null; then
+  function is_interactive() {
     # if we're in CI/CD, return code 1 immediately
     if [ -n "$CI" ]; then return 1; fi
 
@@ -44,7 +43,7 @@ if ! hash is_interactive &>/dev/null; then
     if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then return 0; fi
 
     # no? then we will check shellargs for -i as a last resort
-    case $- in (*i*) return 0;; esac
+    case $- in *i*) return 0 ;; esac
 
     # ..... no?! you're still here? throw an error >_>
     return 2
@@ -52,28 +51,27 @@ if ! hash is_interactive &>/dev/null; then
 fi
 
 # check for curdir
-if ! hash curdir &>/dev/null; then
+if ! hash curdir &> /dev/null; then
   # determine actual script location
   # shellcheck disable=SC2120
   function curdir() {
-    dirname -- "$(realpath -Lmq "${1:-"${BASH_SOURCE[0]}"}" 2>/dev/null)"
+    dirname -- "$(realpath -Lmq "${1:-"${BASH_SOURCE[0]}"}" 2> /dev/null)"
   }
 fi
 
 # check for global_add
-if ! hash global_add &>/dev/null; then
+if ! hash global_add &> /dev/null; then
   # installs all arguments as global packages
-  function global_add()
-  {
+  function global_add() {
     local pkg pkgs=("$@") agent=npm command="i -g"
-    if command -v yarn &>/dev/null; then
+    if command -v yarn &> /dev/null; then
       agent="$(command -v yarn)"
       command="global add"
     else
-      agent="$(command -v pnpm 2>/dev/null || command -v npm 2>/dev/null)"
+      agent="$(command -v pnpm 2> /dev/null || command -v npm 2> /dev/null)"
       command="i -g"
     fi
-    $agent "$command" "${pkgs[@]}" &>/dev/null && {
+    $agent "$command" "${pkgs[@]}" &> /dev/null && {
       echo "Installed with $agent:"
       for pkg in "${pkgs[@]}"; do
         echo -e "\\033[1;32m ✓ $pkg \\033[0m"
@@ -84,8 +82,7 @@ if ! hash global_add &>/dev/null; then
 
 fi
 
-function setup_env()
-{
+function setup_env() {
   declare -l DOTFILES_CORE
   declare -g IS_INTERACTIVE DOTFILES_PREFIX
   declare -g -r DOTFILES_LOG DOTFILES_LOGPATH DOTFILES_BACKUP_PATH
@@ -94,7 +91,7 @@ function setup_env()
   [ -z "${OSTYPE:+x}" ] && OSTYPE=$(ostype)
 
   # $IS_DARWIN=1 if on a Mac
-  [[ "$OSTYPE" == [Dd]arwin* ]] && IS_DARWIN=1 || IS_DARWIN=0
+  [[ $OSTYPE == [Dd]arwin* ]] && IS_DARWIN=1 || IS_DARWIN=0
 
   # IS_INTERACTIVE=1 if interactive, 0 otherwise (duh)
   # (like in CI/CD, or Codespaces/Gitpod autoinstall during prebuilds)
@@ -106,42 +103,41 @@ function setup_env()
   export DOTFILES_LOGPATH="$DOTFILES_PREFIX/_installs/$(date +%F)-$(date +%s)"
   export DOTFILES_LOG="${DOTFILES_LOGPATH-}/install.log"
   export DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup"
-  [ -d "$DOTFILES_LOGPATH" ] || mkdir -p "$DOTFILES_LOGPATH" &>/dev/null;
-  [ -d "$DOTFILES_BACKUP_PATH" ] || mkdir -p "$DOTFILES_BACKUP_PATH" &>/dev/null;
-  command touch "$DOTFILES_LOG" &>/dev/null;
+  [ -d "$DOTFILES_LOGPATH" ] || mkdir -p "$DOTFILES_LOGPATH" &> /dev/null
+  [ -d "$DOTFILES_BACKUP_PATH" ] || mkdir -p "$DOTFILES_BACKUP_PATH" &> /dev/null
+  command touch "$DOTFILES_LOG" &> /dev/null
 
-  DOTFILES_CORE="$(curdir 2>/dev/null || echo -n "$DOTFILES_PREFIX")/.bashrc.d/core.sh"
+  DOTFILES_CORE="$(curdir 2> /dev/null || echo -n "$DOTFILES_PREFIX")/.bashrc.d/core.sh"
 
   # shellcheck source=/dev/null
   [ -r "$DOTFILES_CORE" ] && . "$DOTFILES_CORE"
 
-  cd "$(curdir)" 2>/dev/null || exit 1;
+  cd "$(curdir)" 2> /dev/null || exit 1
 }
 
 function print_banner() {
   local message divider i
   case "${1-}" in
-  step)
-    printf '\033[1;2;4m(%d/%d)\033[0m \033[1m%s\033[0m\n\n' "$STEP_NUM" "$STEP_TOTAL" "${*:2}"
-    ;;
-  *)
-    divider="" divider_char="-"
-    if [ "${#1}" = "1" ] && [ -n "$2" ]; then
-      divider_char="${1:-"-"}"
-      message="${*:2}"
-    else
-      message="${*:-"Beginning dotfiles installation"}"
-    fi
-    for ((i = 0; i < ${COLUMNS:-100}; i++)); do
-      divider+="${divider_char:-"="}"
-    done
-    printf '\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
-    ;;
+    step)
+      printf '\033[1;2;4m(%d/%d)\033[0m \033[1m%s\033[0m\n\n' "$STEP_NUM" "$STEP_TOTAL" "${*:2}"
+      ;;
+    *)
+      divider="" divider_char="-"
+      if [ "${#1}" = "1" ] && [ -n "$2" ]; then
+        divider_char="${1:-"-"}"
+        message="${*:2}"
+      else
+        message="${*:-"Beginning dotfiles installation"}"
+      fi
+      for ((i = 0; i < ${COLUMNS:-100}; i++)); do
+        divider+="${divider_char:-"="}"
+      done
+      printf '\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
+      ;;
   esac
 }
 
-function print_step_complete()
-{
+function print_step_complete() {
   if (($# > 0)); then
     printf '\n\033[1;48;2;40;60;66;38;2;240;240;240m %s \033[0;2;3m %s\n\n' "${1-}" "${*:2}"
   else
@@ -158,12 +154,12 @@ function setup_brew() {
   print_banner step $'Installing/upgrading \033[1;4;35mhomebrew\033[0;1m and required formulae...'
   {
     # install homebrew if not already installed
-    if ! command -v brew &>/dev/null; then
+    if ! command -v brew &> /dev/null; then
       curl -fsSL https://raw.github.com/Homebrew/install/HEAD/install.sh | bash -
     fi
 
     # execute now just to be sure its available for us immediately
-    eval "$(brew shellenv 2>/dev/null)"
+    eval "$(brew shellenv 2> /dev/null)"
 
     brew install "${verbosity-}" --overwrite rsync coreutils gh git-extras
     # brew reinstall "${verbosity-}" coreutils starship gh shfmt;
@@ -198,8 +194,8 @@ function setup_brew() {
           supabase/tap/supabase
 
         # for developing jekyll sites (and other things for github pages, etc)
-        if command -v gem &>/dev/null; then
-          gem install jekyll bundler 2>/dev/null
+        if command -v gem &> /dev/null; then
+          gem install jekyll bundler 2> /dev/null
         fi
       } | tee -i -a "$DOTFILES_LOG" 2>&1
     fi
@@ -207,7 +203,7 @@ function setup_brew() {
     # for macOS
     if [ "$IS_DARWIN" = 1 ]; then
       {
-        command -v rvm &>/dev/null || curl -fsSL https://get.rvm.io | bash -s stable --rails
+        command -v rvm &> /dev/null || curl -fsSL https://get.rvm.io | bash -s stable --rails
 
         brew tap jeroenknoops/tap
         brew install "${verbosity-}" gcc coreutils gitin gpg gpg-suite pinentry-mac
@@ -219,18 +215,16 @@ function setup_brew() {
         echo ''
 
         if [[ $REPLY =~ ^[Yy]$ ]] || ((prompt_status > 128)); then
-          brew install --quiet python3 fontforge
-          brew install --quiet --cask iterm2
-          curl -fsSL https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash -
-          # Google Chrome, Prisma, PIA VPN
-          brew tap homebrew/cask-versions
-          brew tap homebrew/cask-fonts
-          brew install --casks font-fira-code font-oswald font-ubuntu font-caskaydia-cove-nerd-font fontforge \
-            graphql-playground prisma-studio private-internet-access qlmarkdown \
-            visual-studio-code visual-studio-code-insiders \
-            google-chrome google-chrome-canary firefox firefox-nightly
-        else
-          ((STEP_NUM++))
+            brew install --quiet python3 fontforge
+            brew install --quiet --cask iterm2
+            curl -fsSL https://iterm2.com/shell_integration/install_shell_integration_and_utilities.sh | bash -
+            # Google Chrome, Prisma, PIA VPN
+            brew tap homebrew/cask-versions
+            brew tap homebrew/cask-fonts
+            brew install --casks font-fira-code font-oswald font-ubuntu font-caskaydia-cove-nerd-font fontforge \
+                graphql-playground prisma-studio private-internet-access qlmarkdown \
+                visual-studio-code visual-studio-code-insiders \
+                google-chrome google-chrome-canary firefox firefox-nightly
         fi
       } | tee -i -a "$DOTFILES_LOG" 2>&1
     else
@@ -251,12 +245,14 @@ function setup_node() {
 
   {
     # install pnpm if not already installed
-    if ! command -v pnpm &>/dev/null; then
+    if ! command -v pnpm &> /dev/null; then
       curl -fsSL https://get.pnpm.io/install.sh | bash -
     fi
     # ensure we have node.js installed
-    if ! command -v node &>/dev/null || ! node -v &>/dev/null; then
-      { pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g 16.15.0; } && pnpm setup 2>/dev/null
+    if ! command -v node &> /dev/null || ! node -v &> /dev/null; then
+      {
+        pnpm env use -g "${node_v:-lts}" 2> /dev/null || pnpm env use -g 16.15.0
+      } && pnpm setup 2> /dev/null
     fi
   } | tee -i -a "$DOTFILES_LOG" 2>&1
 
@@ -269,7 +265,7 @@ function setup_node() {
   if [[ $REPLY =~ ^[Yy]$ ]] || (("$prompt_status" > 128)); then
     global_add dotenv-vault vercel wrangler@latest miniflare@latest @railway/cli netlify-cli
   else
-    ((STEP_NUM++))
+    STEP_NUM=$((STEP_NUM + 1))
   fi
 
   print_step_complete "$@"
@@ -278,7 +274,7 @@ function setup_node() {
 # setup our new homedir with symlinks to all the dotfiles
 function setup_home() {
   # backup (preserving homedir structure), e.g. /home/gitpod/.dotfiles/.backup/home/gitpod/.bashrc~
-  [ -d "${DOTFILES_BACKUP_PATH-}" ] || mkdir -p "${DOTFILES_BACKUP_PATH-}" &>/dev/null
+  [ -d "${DOTFILES_BACKUP_PATH-}" ] || mkdir -p "${DOTFILES_BACKUP_PATH-}" &> /dev/null
 
   # this part used to use (and most other dotfiles projects still do) symlinks/hardlinks between
   # the ~/.dotfiles folder and the homedir, but it now uses the rsync program for configuring the
@@ -290,10 +286,10 @@ function setup_home() {
 
   # .gitignore and .gitconfig are special!
   # we have to rename them to avoid issues with git applying them to the repository
-  mv -f ~/.{gitignore,gitconfig} "${DOTFILES_BACKUP_PATH-}" &>/dev/null
+  mv -f ~/.{gitignore,gitconfig} "${DOTFILES_BACKUP_PATH-}" &> /dev/null
 
-  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file gitignore ~/.gitignore | tee -i -a "$DOTFILES_LOG" 2>/dev/null
-  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file gitconfig ~/.gitconfig | tee -i -a "$DOTFILES_LOG" 2>/dev/null
+  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file gitignore ~/.gitignore | tee -i -a "$DOTFILES_LOG" 2> /dev/null
+  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file gitconfig ~/.gitconfig | tee -i -a "$DOTFILES_LOG" 2> /dev/null
 
   return 0
 }
@@ -310,7 +306,9 @@ function main() {
   # currently the homebrew installer breaks due to a git syntax error in their code. works fine in gitpod though. 🤔
   if [ -n "${CODESPACES+x}" ]; then
     STEP_TOTAL=2 # adjust step total since we're skipping homebrew
-    { curl -sS https://starship.rs/install.sh | sh -; }
+    {
+      curl -sS https://starship.rs/install.sh | sh -
+    }
   else
     STEP_TOTAL=3
     # for everything else, setup homebrew and install some packages / formulae
@@ -326,23 +324,23 @@ function main() {
   print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
 
   # if we are in interactive mode (not in CI/CD), ask the user if they want to proceed
-  if is_interactive 2>/dev/null; then
+  if is_interactive 2> /dev/null; then
     read -r -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0;1;31m DANGER \033[0m ·  \033[3;31mContinuing with install will overwrite existing files in \033[3;4m'"$HOME"$'\033[0;3;31m.\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (respond within 30s or \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
     # if the user says yes, or force, run the install
-    if (($? > 128)) || [[ "$REPLY" == [Yy]* ]]; then
+    if (($? > 128)) || [[ $REPLY == [Yy]* ]]; then
       echo ''
-      setup_home && print_step_complete;
+      setup_home && print_step_complete
     else
-      echo -e '\n\n\033[1;31mAborted.\033[0m' && return 1;
+      echo -e '\n\n\033[1;31mAborted.\033[0m' && return 1
     fi # $REPLY
   else
     # otherwise (automated install), proceed to setting up the homedir
-      setup_home && print_step_complete;
-  fi   # $-
+    setup_home && print_step_complete
+  fi # $-
 
   for cmd_alias in gpg gh starship; do
     # symlink the alias to the actual command for any missing binaries
-    if command -v "$cmd_alias" &>/dev/null && [ ! -x "/usr/local/bin/$cmd_alias" ]; then
+    if command -v "$cmd_alias" &> /dev/null && [ ! -x "/usr/local/bin/$cmd_alias" ]; then
       sudo command ln -sf "$(command -v "$cmd_alias" 2>&1)" "/usr/local/bin/$cmd_alias"
     fi
   done
@@ -358,7 +356,10 @@ function cleanup_env() {
 }
 
 # run it and clean up after!
-{ setup_env 2>/dev/null; main "$@" || exit $?; } | tee -i -a "$DOTFILES_LOG" 2>&1;
+{
+  setup_env 2> /dev/null
+  main "$@" || exit $?
+} | tee -i -a "$DOTFILES_LOG" 2>&1
 
 cleanup_env && unset -f cleanup_env
 exit 0

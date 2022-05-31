@@ -237,7 +237,7 @@ function setup_node() {
   local node_v
   node_v="${1:-lts}"
 
-  print_banner step $'Installing/upgrading \033[1;4;31mPNPM\033[0;1m and \033[4;32mNode\033[0;1;2m ('"$node_v"')'
+  print_banner step $'Installing/upgrading \033[1;4;31mPNPM\033[0;1m and \033[4;32mNode\033[0;1;2m v'"$node_v"$'\033[0m'
 
   {
     # install pnpm if not already installed
@@ -246,7 +246,7 @@ function setup_node() {
     fi
     # ensure we have node.js installed
     if ! command -v node &>/dev/null || ! node -v &>/dev/null; then
-      { pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g lts; } && pnpm setup 2>/dev/null
+      { pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g 16.15.0; } && pnpm setup 2>/dev/null
     fi
   } | tee -i -a "$DOTFILES_LOG" 2>&1
 
@@ -310,7 +310,7 @@ function main() {
 
   # setup pnpm + node.js and install some global packages I frequently use
   # pin node.js to 16.14.2 to prevent breaking errors
-  setup_node 16
+  setup_node "16.15.0"
 
   ## syncing the home directory ###################################################################
   print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"

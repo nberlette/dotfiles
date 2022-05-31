@@ -1,13 +1,14 @@
 {
-  "name": "dotfiles",
-  "version": "0.6.0",
+  "name": "@brlt/dotfiles",
+  "version": "0.7.0",
   "license": "MIT",
   "author": {
     "name": "Nicholas Berlette",
     "email": "nick@berlette.com",
     "url": "https://github.com/nberlette"
   },
-  "description": "Nick's dotfiles and bash env. macOS or Gitpod",
+  "private": true,
+  "description": "Nick's personal dotfiles. Automated configuration for development on macOS, Gitpod, or Codespaces.",
   "repository": "nberlette/dotfiles",
   "bugs": "https://github.com/nberlette/dotfiles/issues",
   "readme": "https://github.com/nberlette/dotfiles#readme",
@@ -15,11 +16,13 @@
   "keywords": [
     "dotfiles",
     "gitpod",
-    "podfiles",
-    "config"
+    "codespaces",
+    "macos",
+    "config",
+    "bash",
+    "shell"
   ],
-  "main": "./install.sh",
-  "packageManager": "pnpm@7.0.0",
+  "packageManager": "pnpm@7.1.7",
   "publishConfig": {
     "access": "public"
   },
@@ -30,35 +33,37 @@
   },
   "prettier": "@brlt/prettier/bash",
   "scripts": {
-    "preinstall": "npx -y corepack enable",
+    "preinstall": "npx -y only-allow pnpm",
     "postinstall": "brew install --quiet --overwrite shfmt &>/dev/null",
-    "test": "nr lint",
-    "lint": "run-s check:*",
-    "clean": "npx -q -y rimraf node_modules .backup .install*.log",
+    "test": "run-s check:*",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "clean": "npx -q -y rimraf node_modules _installs .backup .*.log",
     "shfmt": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -s",
     "shellcheck": "shellcheck --color=always --shell=bash -x",
+    "check": "run-s check:* lint",
     "check:shfmt": "nr shfmt -- -d .path .exports .functions .bash* install.sh",
     "check:shellsheck": "nr shellcheck -- .path .exports .functions .bash* install.sh",
     "check:prettier": "prettier -c .",
     "format:shfmt": "nr shfmt -- -w .path .exports .functions .bash* install.sh",
     "format:prettier": "prettier -w .",
-    "format": "run-s format:*"
+    "format": "run-s format:* lint:fix"
   },
   "devDependencies": {
     "@brlt/eslint-config": "^0.0.4",
     "@brlt/n": "^0.1.1",
     "@brlt/prettier": "~1.8.2",
     "@brlt/utils": "^0.0.1",
-    "eslint": "^8.15.0",
+    "eslint": "^8.16.0",
     "esno": "^0.16.3",
     "npm-run-all": "4.1.5",
-    "pnpm": "^7.0.1",
+    "pnpm": "^7.1.7",
     "prettier": "^2.6.2",
     "prettier-plugin-sh": "^0.11.0",
     "shellcheck": "^1.1.0",
     "templette": "^1.0.0",
-    "tsup": "^5.12.8",
-    "typescript": "^4.6.4",
+    "tsup": "^6.0.1",
+    "typescript": "^4.7.2",
     "zx": "^6.1.0"
   }
 }

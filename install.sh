@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  install.sh                               Nicholas Berlette, 2022-05-21  ##
+##  install.sh                               Nicholas Berlette, 2022-05-31  ##
 ## ------------------------------------------------------------------------ ##
-##  https://github.com/nberlette/dotfiles/blob/main/install.sh              ##
+##        https://github.com/nberlette/dotfiles/blob/main/install.sh        ##
+## ------------------------------------------------------------------------ ##
+##              MIT © Nicholas Berlette <nick@berlette.com>                 ##
 ## ------------------------------------------------------------------------ ##
 
 # ask for password right away
@@ -29,38 +31,53 @@ function ostype() {
 
 # IS_INTERACTIVE=1 if interactive, 0 otherwise (duh)
 # (like in CI/CD, or Codespaces/Gitpod autoinstall during prebuilds)
-[ -t 0 ] && IS_INTERACTIVE=1;
-case $- in *i*) IS_INTERACTIVE=1;; esac
+function is_interactive()
+{
+  # check FDs for tty (stdin, stdout, stderr)
+  if [ -t 0 ] && [ -t 1 ] && [ -t 2]; then
+    echo -n "1"
+    return 0
+  fi
 
-# current step number
+  # check shellargs for -i
+  case $- in
+    *i*)
+      echo -n "1"
+      return 0
+    ;;
+  esac
+
+  # still here? throw error
+  return 1
+}
+IS_INTERACTIVE="$(is_interactive 2>&1)"
+
+# current step number, total step count
 STEP_NUM=1
-# total step count
 STEP_TOTAL=3
 
-# ensure our $TERM variable is set in CI/CD environments (gh-actions)
+# ensure $TERM is set in CI/CD (gh-actions)
 [ -z "${TERM:+x}" ] && export TERM="${TERM:-"xterm-color"}"
 
 # curdir :]
-if ! type curdir &>/dev/null; then
+if ! hash curdir &>/dev/null; then
   # determine actual script location
   # shellcheck disable=SC2120
   function curdir() {
-    dirname -- "$(realpath -L -m -q "${1:-"${BASH_SOURCE[0]}"}" 2>/dev/null)"
+    dirname -- "$(realpath -Lmq "${1:-"${BASH_SOURCE[0]}"}" 2>/dev/null)"
   }
 fi
 
-if ! type global_add &>/dev/null; then
+if ! hash global_add &>/dev/null; then
   # installs all arguments as global packages
-  function global_add() {
+  function global_add()
+  {
     local pkg pkgs=("$@") agent=npm command="i -g"
-    if command -v pnpm &>/dev/null; then
-      agent=pnpm
-      command="add -g"
-    elif command -v yarn &>/dev/null; then
-      agent=yarn
+    if command -v yarn &>/dev/null; then
+      agent="$(command yarn)"
       command="global add"
     else
-      agent=npm
+      agent="$(command -v pnpm 2>/dev/null || command -v npm 2>/dev/null)"
       command="i -g"
     fi
     $agent "$command" "${pkgs[@]}" &>/dev/null && {
@@ -77,19 +94,19 @@ fi
 export TZ='America/Los_Angeles'
 export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 
-DOTFILES_LOG="$DOTFILES_PREFIX/_installs/$(date +%F)-$(date +%s)/install.log"
-DOTFILES_LOGPATH="$(dirname -- "$DOTFILES_LOG")"
+DOTFILES_LOGPATH="$DOTFILES_PREFIX/_installs/$(date +%F)-$(date +%s)"
+DOTFILES_LOG="${DOTFILES_LOGPATH-}/install.log"
 mkdir -p "$DOTFILES_LOGPATH" &>/dev/null
 
-DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup/"
+DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup"
 mkdir -p "$DOTFILES_BACKUP_PATH" &>/dev/null
 
-DOTFILES_CORE="$DOTFILES_PREFIX"/.bashrc.d/core.sh
+DOTFILES_CORE="$(curdir)/.bashrc.d/core.sh"
 
 # shellcheck source=/dev/null
 [ -r "$DOTFILES_CORE" ] && . "$DOTFILES_CORE"
 
-cd "$(curdir)" 2>/dev/null || return
+cd "$(curdir)" 2>/dev/null || exit 1;
 
 function print_banner() {
   local message divider i
@@ -99,7 +116,7 @@ function print_banner() {
     ;;
   *)
     divider="" divider_char="-"
-    if [[ ${#1} == 1 && -n "$2" ]]; then
+    if [ "${#1}" = "1" ] && [ -n "$2" ]; then
       divider_char="${1:-"-"}"
       message="${*:2}"
     else
@@ -113,7 +130,8 @@ function print_banner() {
   esac
 }
 
-function print_step_complete() {
+function print_step_complete()
+{
   if (($# > 0)); then
     printf '\n\033[1;48;2;40;60;66;38;2;240;240;240m %s \033[0;2;3m %s\n\n' "${1-}" "${*:2}"
   else
@@ -226,7 +244,7 @@ function setup_node() {
     fi
     # ensure we have node.js installed
     if ! command -v node &>/dev/null || ! node -v &>/dev/null; then
-      { pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g latest; } && pnpm setup 2>/dev/null
+      { pnpm env use -g "${node_v:-lts}" 2>/dev/null || pnpm env use -g lts; } && pnpm setup 2>/dev/null
     fi
   } | tee -i -a "$DOTFILES_LOG" 2>&1
 
@@ -245,10 +263,8 @@ function setup_node() {
 
 # setup our new homedir with symlinks to all the dotfiles
 function setup_home() {
-  local backupdir
   # backup (preserving homedir structure), e.g. /home/gitpod/.dotfiles/.backup/home/gitpod/.bashrc~
-  backupdir="$HOME/.dotfiles/.backup$HOME"
-  [ -d "$backupdir" ] || mkdir -p "$backupdir" &>/dev/null
+  [ -d "${DOTFILES_BACKUP_PATH-}" ] || mkdir -p "${DOTFILES_BACKUP_PATH-}" &>/dev/null
 
   # this part used to use (and most other dotfiles projects still do) symlinks/hardlinks between
   # the ~/.dotfiles folder and the homedir, but it now uses the rsync program for configuring the
@@ -256,14 +272,14 @@ function setup_home() {
   # and maintainable. +/- ~100 lines of code were replaced by 1 line... and it creates backups ;)
 
   # define exclusions with .rsyncignore; define files to copy with .rsyncinclude file
-  rsync -avh --backup --backup-dir="$backupdir" --whole-file --files-from=.rsyncfiles --exclude-from=.rsyncignore . ~ | tee -i -a "$DOTFILES_LOG" 2>&1
+  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file --files-from=.rsyncfiles --exclude-from=.rsyncignore . ~ | tee -i -a "$DOTFILES_LOG" 2>&1
 
   # .gitignore and .gitconfig are special!
   # we have to rename them to avoid issues with git applying them to the repository
-  mv -f ~/.{gitignore,gitconfig} "$backupdir" &>/dev/null
+  mv -f ~/.{gitignore,gitconfig} "${DOTFILES_BACKUP_PATH-}" &>/dev/null
 
-  rsync -avh --backup --backup-dir="$backupdir" --whole-file gitignore ~/.gitignore | tee -i -a "$DOTFILES_LOG" 2>&1
-  rsync -avh --backup --backup-dir="$backupdir" --whole-file gitconfig ~/.gitconfig | tee -i -a "$DOTFILES_LOG" 2>&1
+  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file gitignore ~/.gitignore | tee -i -a "$DOTFILES_LOG" 2>/dev/null
+  rsync -avh --backup --backup-dir="${DOTFILES_BACKUP_PATH-}" --whole-file gitconfig ~/.gitconfig | tee -i -a "$DOTFILES_LOG" 2>/dev/null
 
   return 0
 }
@@ -280,17 +296,17 @@ function main() {
   # currently the homebrew installer breaks due to a git syntax error in their code. works fine in gitpod though. 🤔
   if [ -n "${CODESPACES+x}" ]; then
     STEP_TOTAL=2 # adjust step total since we're skipping homebrew
+    { curl -sS https://starship.rs/install.sh | sh -; } | tee -i -a "$DOTFILES_LOG" 2>&1
   else
     STEP_TOTAL=3
     # for everything else, setup homebrew and install some packages / formulae
     setup_brew
+    brew install --quiet --overwrite starship | tee -i -a "$DOTFILES_LOG" 2>&1
   fi
-  
-  { curl -sS https://starship.rs/install.sh | sh - --yes; } | tee -i -a "$DOTFILES_LOG" 2>&1
 
   # setup pnpm + node.js and install some global packages I frequently use
   # pin node.js to 16.14.2 to prevent breaking errors
-  setup_node "16.14.2"
+  setup_node 16
 
   ## syncing the home directory ###################################################################
   print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
@@ -318,7 +334,7 @@ function main() {
 }
 
 function cleanup_env() {
-  unset -v STEP_NUM STEP_TOTAL verbosity
+  unset -v STEP_NUM STEP_TOTAL verbosity IS_INTERACTIVE IS_DARWIN
   unset -f main setup_home setup_node setup_brew print_step_complete print_banner global_add
 }
 

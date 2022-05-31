@@ -14,5 +14,6 @@
 .functions
 .hushlogin
 .inputrc
+.npmrc
 .path
 .profile

@@ -190,7 +190,6 @@ coverage
 .vercel_build_output
 
 .tern-port
-.npmrc
 node_modules
 bower_components
 build/Release

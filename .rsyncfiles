@@ -1,7 +1,7 @@
 .bashrc.d/
 .bin/
 .config/gh/config.yml
-.gnupg/*.conf
+.gnupg/
 .gitconfig.d/
 .bash_aliases
 .bash_logout

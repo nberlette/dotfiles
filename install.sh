@@ -325,17 +325,21 @@ function main() {
     fi # $REPLY
   fi   # $-
 
-  if command -v gpg &>/dev/null && [ ! -x /usr/local/bin/gpg ]; then
-    sudo ln -sf "$(command -v gpg 2>/dev/null)" /usr/local/bin/gpg
-  fi
+  for cmd_alias in gpg gh starship; do
+    # symlink the alias to the actual command for any missing binaries
+    if command -v "$cmd_alias" &>/dev/null && [ ! -x "/usr/local/bin/$cmd_alias" ]; then
+      sudo command ln -sf "$(command -v "$cmd_alias" 2>/dev/null)" "/usr/local/bin/$cmd_alias"
+    fi
+  done
+  # ensure gpg folder has the right perms
   chmod 700 ~/.gnupg &>/dev/null
 
   return 0
 }
 
 function cleanup_env() {
-  unset -v STEP_NUM STEP_TOTAL verbosity IS_INTERACTIVE IS_DARWIN
-  unset -f main setup_home setup_node setup_brew print_step_complete print_banner global_add
+  unset -v STEP_NUM STEP_TOTAL verbosity IS_INTERACTIVE IS_DARWIN cmd_alias
+  unset -f main setup_home setup_node setup_brew print_step_complete print_banner global_add is_interactive
 }
 
 # run it and clean up after!

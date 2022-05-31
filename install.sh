@@ -19,39 +19,6 @@ verbosity="--quiet"
 # always ebable verbose logging if in CI/CD
 [ -n "${CI:+x}" ] && verbosity="--verbose"
 
-function ostype() {
-  uname -s | tr '[:upper:]' '[:lower:]' 2>/dev/null
-}
-
-# $OSTYPE variable (linux-gnu, darwin, etc)
-[ -z "${OSTYPE:+x}" ] && OSTYPE=$(ostype)
-
-# $IS_DARWIN=1 if on a Mac
-[[ "$OSTYPE" == [Dd]arwin* ]] && IS_DARWIN=1 || IS_DARWIN=0
-
-# IS_INTERACTIVE=1 if interactive, 0 otherwise (duh)
-# (like in CI/CD, or Codespaces/Gitpod autoinstall during prebuilds)
-function is_interactive()
-{
-  # check FDs for tty (stdin, stdout, stderr)
-  if [ -t 0 ] && [ -t 1 ] && [ -t 2]; then
-    echo -n "1"
-    return 0
-  fi
-
-  # check shellargs for -i
-  case $- in
-    *i*)
-      echo -n "1"
-      return 0
-    ;;
-  esac
-
-  # still here? throw error
-  return 1
-}
-IS_INTERACTIVE="$(is_interactive 2>&1)"
-
 # current step number, total step count
 STEP_NUM=1
 STEP_TOTAL=3
@@ -59,7 +26,32 @@ STEP_TOTAL=3
 # ensure $TERM is set in CI/CD (gh-actions)
 [ -z "${TERM:+x}" ] && export TERM="${TERM:-"xterm-color"}"
 
-# curdir :]
+# check for ostype
+if ! hash ostype &>/dev/null; then
+  function ostype() {
+    uname -s | tr '[:upper:]' '[:lower:]' 2>/dev/null
+  }
+fi
+
+# check for is_interactive
+if ! hash is_interactive &>/dev/null; then
+  function is_interactive()
+  {
+    # if we're in CI/CD, return code 1 immediately
+    if [ -n "$CI" ]; then return 1; fi
+
+    # no? okay, lets check for tty based on stdin, stdout, stderr
+    if [ -t 0 ] && [ -t 1 ] && [ -t 2 ]; then return 0; fi
+
+    # no? then we will check shellargs for -i as a last resort
+    case $- in (*i*) return 0;; esac
+
+    # ..... no?! you're still here? throw an error >_>
+    return 2
+  }
+fi
+
+# check for curdir
 if ! hash curdir &>/dev/null; then
   # determine actual script location
   # shellcheck disable=SC2120
@@ -68,6 +60,7 @@ if ! hash curdir &>/dev/null; then
   }
 fi
 
+# check for global_add
 if ! hash global_add &>/dev/null; then
   # installs all arguments as global packages
   function global_add()
@@ -91,22 +84,39 @@ if ! hash global_add &>/dev/null; then
 
 fi
 
-export TZ='America/Los_Angeles'
-export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
+function setup_env()
+{
+  declare -l DOTFILES_CORE
+  declare -g IS_INTERACTIVE DOTFILES_PREFIX
+  declare -g -r DOTFILES_LOG DOTFILES_LOGPATH DOTFILES_BACKUP_PATH
 
-DOTFILES_LOGPATH="$DOTFILES_PREFIX/_installs/$(date +%F)-$(date +%s)"
-DOTFILES_LOG="${DOTFILES_LOGPATH-}/install.log"
-mkdir -p "$DOTFILES_LOGPATH" &>/dev/null
+  # $OSTYPE variable (linux-gnu, darwin, etc)
+  [ -z "${OSTYPE:+x}" ] && OSTYPE=$(ostype)
 
-DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup"
-mkdir -p "$DOTFILES_BACKUP_PATH" &>/dev/null
+  # $IS_DARWIN=1 if on a Mac
+  [[ "$OSTYPE" == [Dd]arwin* ]] && IS_DARWIN=1 || IS_DARWIN=0
 
-DOTFILES_CORE="$(curdir)/.bashrc.d/core.sh"
+  # IS_INTERACTIVE=1 if interactive, 0 otherwise (duh)
+  # (like in CI/CD, or Codespaces/Gitpod autoinstall during prebuilds)
+  IS_INTERACTIVE="$(is_interactive 2>&1)"
 
-# shellcheck source=/dev/null
-[ -r "$DOTFILES_CORE" ] && . "$DOTFILES_CORE"
+  export TZ='America/Los_Angeles'
+  export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 
-cd "$(curdir)" 2>/dev/null || exit 1;
+  export DOTFILES_LOGPATH="$DOTFILES_PREFIX/_installs/$(date +%F)-$(date +%s)"
+  export DOTFILES_LOG="${DOTFILES_LOGPATH-}/install.log"
+  export DOTFILES_BACKUP_PATH="${DOTFILES_LOGPATH}/.backup"
+  [ -d "$DOTFILES_LOGPATH" ] || mkdir -p "$DOTFILES_LOGPATH" &>/dev/null;
+  [ -d "$DOTFILES_BACKUP_PATH" ] || mkdir -p "$DOTFILES_BACKUP_PATH" &>/dev/null;
+  command touch "$DOTFILES_LOG" &>/dev/null;
+
+  DOTFILES_CORE="$(curdir 2>/dev/null || echo -n "$DOTFILES_PREFIX")/.bashrc.d/core.sh"
+
+  # shellcheck source=/dev/null
+  [ -r "$DOTFILES_CORE" ] && . "$DOTFILES_CORE"
+
+  cd "$(curdir)" 2>/dev/null || exit 1;
+}
 
 function print_banner() {
   local message divider i
@@ -300,54 +310,55 @@ function main() {
   # currently the homebrew installer breaks due to a git syntax error in their code. works fine in gitpod though. 🤔
   if [ -n "${CODESPACES+x}" ]; then
     STEP_TOTAL=2 # adjust step total since we're skipping homebrew
-    { curl -sS https://starship.rs/install.sh | sh -; } | tee -i -a "$DOTFILES_LOG" 2>&1
+    { curl -sS https://starship.rs/install.sh | sh -; }
   else
     STEP_TOTAL=3
     # for everything else, setup homebrew and install some packages / formulae
     setup_brew
-    brew install --quiet --overwrite starship | tee -i -a "$DOTFILES_LOG" 2>&1
+    brew install --quiet --overwrite starship
   fi
 
   # setup pnpm + node.js and install some global packages I frequently use
   # pin node.js to 16.14.2 to prevent breaking errors
   setup_node "16.15.0"
 
-  ## syncing the home directory ###################################################################
+  # syncing the home directory
   print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
 
-  # if we are in interactive mode, and not forcing, ask the user if they want to proceed
-  if [ -n "${IS_INTERACTIVE+x}" ] && [ -z "$CI" ]; then
+  # if we are in interactive mode (not in CI/CD), ask the user if they want to proceed
+  if is_interactive 2>/dev/null; then
     read -r -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0;1;31m DANGER \033[0m ·  \033[3;31mContinuing with install will overwrite existing files in \033[3;4m'"$HOME"$'\033[0;3;31m.\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (respond within 30s or \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
-    local prompt_status=$?
-    echo ''
-
     # if the user says yes, or force, run the install
-    if [[ "$REPLY" =~ ^[Yy]$ ]] || ((prompt_status > 128)); then
-      { setup_home | tee -i -a "$DOTFILES_LOG" 2>&1; } && print_step_complete && return 0;
+    if (($? > 128)) || [[ "$REPLY" == [Yy]* ]]; then
+      echo ''
+      setup_home && print_step_complete;
     else
-      echo -e '\n\033[1;31mAborted.\033[0m' && exit 1
+      echo -e '\n\n\033[1;31mAborted.\033[0m' && return 1;
     fi # $REPLY
+  else
+    # otherwise (automated install), proceed to setting up the homedir
+      setup_home && print_step_complete;
   fi   # $-
 
   for cmd_alias in gpg gh starship; do
     # symlink the alias to the actual command for any missing binaries
     if command -v "$cmd_alias" &>/dev/null && [ ! -x "/usr/local/bin/$cmd_alias" ]; then
-      sudo command ln -sf "$(command -v "$cmd_alias" 2>/dev/null)" "/usr/local/bin/$cmd_alias"
+      sudo command ln -sf "$(command -v "$cmd_alias" 2>&1)" "/usr/local/bin/$cmd_alias"
     fi
   done
   # ensure gpg folder has the right perms
-  chmod 700 ~/.gnupg &>/dev/null
+  chmod 700 ~/.gnupg 2>&1
 
   return 0
 }
 
 function cleanup_env() {
   unset -v STEP_NUM STEP_TOTAL verbosity IS_INTERACTIVE IS_DARWIN cmd_alias
-  unset -f main setup_home setup_node setup_brew print_step_complete print_banner global_add is_interactive
+  unset -f main setup_home setup_node setup_brew print_step_complete print_banner global_add is_interactive setup_env
 }
 
 # run it and clean up after!
-main "$@" | tee -i -a "$DOTFILES_LOG" 2>&1 && {
-  cleanup_env && unset -f cleanup_env
-  exit 0
-} || exit $?
+{ setup_env 2>/dev/null; main "$@" || exit $?; } | tee -i -a "$DOTFILES_LOG" 2>&1;
+
+cleanup_env && unset -f cleanup_env
+exit 0

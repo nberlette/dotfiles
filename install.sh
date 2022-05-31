@@ -74,7 +74,7 @@ if ! hash global_add &>/dev/null; then
   {
     local pkg pkgs=("$@") agent=npm command="i -g"
     if command -v yarn &>/dev/null; then
-      agent="$(command yarn)"
+      agent="$(command -v yarn)"
       command="global add"
     else
       agent="$(command -v pnpm 2>/dev/null || command -v npm 2>/dev/null)"
@@ -219,6 +219,8 @@ function setup_brew() {
             graphql-playground prisma-studio private-internet-access qlmarkdown \
             visual-studio-code visual-studio-code-insiders \
             google-chrome google-chrome-canary firefox firefox-nightly
+        else
+          ((STEP_NUM++))
         fi
       } | tee -i -a "$DOTFILES_LOG" 2>&1
     else
@@ -256,6 +258,8 @@ function setup_node() {
 
   if [[ $REPLY =~ ^[Yy]$ ]] || (("$prompt_status" > 128)); then
     global_add dotenv-vault vercel wrangler@latest miniflare@latest @railway/cli netlify-cli
+  else
+    ((STEP_NUM++))
   fi
 
   print_step_complete "$@"

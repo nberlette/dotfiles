@@ -1,37 +1,41 @@
 {
-  "name": "docs",
-  "version": "0.0.1",
+  "name": "@brlt/dotfiles-docs",
+  "version": "0.0.2",
   "license": "MIT",
   "author": "Nicholas Berlette <nick@berlette.com>",
+  "private": true,
+  "packageManager": "pnpm@7.1.7",
+  "homepage": "https://dotfiles.ml",
   "repository": {
     "type": "git",
     "url": "https://github.com/nberlette/dotfiles",
     "directory": "docs"
   },
-  "private": true,
-  "packageManager": "pnpm@6.23.9",
-  "homepage": "https://dotfiles.ml",
   "readme": "https://github.com/nberlette/dotfiles#readme",
   "bugs": "https://github.com/nberlette/dotfiles/issues",
   "scripts": {
-    "lint": "prettier --ignore-path .gitignore --check .",
-    "format": "prettier --ignore-path .gitignore --write .",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --ignore-path=.gitignore -c .",
+    "format:fix": "prettier --ignore-path=.gitignore -w .",
     "dev": "vitepress dev .",
     "build": "vitepress build .",
     "serve": "vitepress serve . --port ${PORT:-3001}",
-    "prebuild": "pnpm format"
+    "prebuild": "pnpm format:fix; pnpm lint:fix; pnpm lint"
   },
   "prettier": "@brlt/prettier",
+  "eslintConfig": {
+    "extends": ["@brlt"]
+  },
   "devDependencies": {
     "@algolia/client-search": "^4.9.1",
-    "@brlt/prettier": "latest",
+    "@brlt/eslint-config": "0.0.4",
+    "@brlt/n": "0.1.1",
+    "@brlt/prettier": "1.8.2",
     "@typehaus/metropolis": "^12.0.0-next.7",
-    "@types/react": ">= 16.8.0 < 18.0.0",
-    "pnpm": "latest",
-    "prettier": "2.6.0",
-    "react": ">= 16.8.0 < 18.0.0",
-    "react-dom": ">= 16.8.0 < 18.0.0",
-    "typescript": "4.6.3",
-    "vitepress": "0.22.3"
+    "eslint": "8.16.0",
+    "prettier": "2.6.2",
+    "typescript": "4.7.2",
+    "vitepress": "0.22.4"
   }
 }

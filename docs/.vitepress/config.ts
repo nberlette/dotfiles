@@ -1,60 +1,60 @@
-import type { DefaultTheme, HeadConfig } from 'vitepress';
-import { defineConfig } from 'vitepress';
+import { type DefaultTheme, type HeadConfig, defineConfig } from 'vitepress'
 
 const head: HeadConfig[] = [
   [
-    'link', {
-      'rel': 'prefetch',
-      'as': 'style',
-      'type': 'text/css;charset=utf-8',
-      'href': 'https://cdn.jsdelivr.net/npm/@typehaus/metropolis/index.css',
-      'crossorigin': 'anonymous',
-    }
+    'link',
+    {
+      rel: 'prefetch',
+      as: 'style',
+      type: 'text/css;charset=utf-8',
+      href: 'https://cdn.jsdelivr.net/npm/@typehaus/metropolis/index.css',
+      crossorigin: 'anonymous',
+    },
   ],
   [
     'link',
     {
-      'rel': 'prefetch',
-      'as': 'icon',
-      'type': 'image/svg+xml;charset=utf-8',
-      'href': '/favicon.svg',
-    }
+      rel: 'prefetch',
+      as: 'icon',
+      type: 'image/svg+xml;charset=utf-8',
+      href: '/favicon.svg',
+    },
   ],
   [
     'link',
     {
-      'rel': 'icon',
-      'type': 'image/svg+xml;charset=utf-8',
-      'href': '/favicon.svg',
-    }
+      rel: 'icon',
+      type: 'image/svg+xml;charset=utf-8',
+      href: '/favicon.svg',
+    },
   ],
   [
     'link',
     {
-      'rel': 'stylesheet',
-      'type': 'text/css;charset=utf-8',
-      'href': 'https://cdn.jsdelivr.net/npm/@typehaus/metropolis/index.css',
-      'crossorigin': 'anonymous',
-    }
+      rel: 'stylesheet',
+      type: 'text/css;charset=utf-8',
+      href: 'https://cdn.jsdelivr.net/npm/@typehaus/metropolis/index.css',
+      crossorigin: 'anonymous',
+    },
   ],
   [
     'link',
     {
-      'rel': 'mask-icon',
-      'type': 'image/svg+xml;charset=utf-8',
-      'href': '/favicon.svg',
-      'color': '#112233',
-    }
+      rel: 'mask-icon',
+      type: 'image/svg+xml;charset=utf-8',
+      href: '/favicon.svg',
+      color: '#112233',
+    },
   ],
   [
     'meta',
     {
-      'name': 'theme-color',
-      'content': '#112233',
-      'value': '#112233',
-    }
+      name: 'theme-color',
+      content: '#112233',
+      value: '#112233',
+    },
   ],
-];
+]
 
 const nav: DefaultTheme.NavItem[] = [
   {
@@ -62,24 +62,24 @@ const nav: DefaultTheme.NavItem[] = [
     target: '_blank',
     rel: 'noopener',
     ariaLabel: 'GitHub Issue Tracker',
-    link: 'https://github.com/nberlette/dotfiles/issues'
+    link: 'https://github.com/nberlette/dotfiles/issues',
   },
   {
     text: 'Discussions',
     target: '_blank',
     rel: 'noopener',
     ariaLabel: 'GitHub Discussions',
-    link: 'https://github.com/nberlette/dotfiles/discussions'
-  }
-];
+    link: 'https://github.com/nberlette/dotfiles/discussions',
+  },
+]
 
 export default defineConfig({
   lang: 'en-US',
   title: 'dotfiles.ml',
   base: '/',
-  head: head,
+  head,
   themeConfig: {
-    nav: nav,
+    nav,
     logo: '/favicon.svg',
     repo: 'nberlette/dotfiles',
     docsDir: 'docs',
@@ -90,4 +90,4 @@ export default defineConfig({
     prevLinks: true,
     nextLinks: true,
   } as DefaultTheme.Config,
-});
+})

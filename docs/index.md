@@ -1,53 +1,59 @@
 ---
-title: "dotfiles.ml"
+title: 'dotfiles.ml'
 home: true
 heroImage: /hero.jpg
-heroAlt: "nberlette/dotfiles"
-heroText: "dotfiles.ml"
+heroAlt: 'nberlette/dotfiles'
+heroText: 'dotfiles.ml'
 tagline: One config to rule them all.
 actionText: Get Started
 actionLink: /#gitpod-automated-install
 features:
-  - title: "Starship Prompt"
-    details: "Have a beautifully consistent shell prompt on any platform."
-  - title: "GnuPG Ready"
-    details: "Configured for GPG-signed commits right out of the box."
-  - title: "Gitpod Friendly"
-    details: "Ready to use in Gitpod Workspaces, with zero configuration."
-footer: "MIT © Nicholas Berlette"
+  - title: 'Starship Prompt'
+    details: 'Have a beautifully consistent shell prompt on any platform.'
+  - title: 'GnuPG Ready'
+    details: 'Configured for GPG-signed commits right out of the box.'
+  - title: 'Gitpod Friendly'
+    details: 'Ready to use in Gitpod Workspaces, with zero configuration.'
+footer: 'MIT © Nicholas Berlette'
 ---
 
 # `@nberlette/dotfiles`
 
 ## Disclaimers
 
-These are just my personal dotfiles that I've converted into a starter template for other developers like yourself. If you like everything the way it is, just use this repository as-is.
+These are just my personal dotfiles that I've converted into a starter template for other developers like yourself. If
+you like everything the way it is, just use this repository as-is.
 
-However, **you're probably better off** [***generating your own dotfiles reposistory***](https://github.com/nberlette/dotfiles/generate). In that scenario, since this repository will just be the template yours is generated from, you have a lot more freedom to tweak things and get it exactly as you like.
+However, **you're probably better off**
+[**_generating your own dotfiles reposistory_**](https://github.com/nberlette/dotfiles/generate). In that scenario,
+since this repository will just be the template yours is generated from, you have a lot more freedom to tweak things and
+get it exactly as you like.
 
 <br>
 
-> Personally, I really like being able to test the limits of different configurations (typically breaking some stuff in the process). I'm not allowed to behave like that in someone else's codebase 😜
+> Personally, I really like being able to test the limits of different configurations (typically breaking some stuff in
+> the process). I'm not allowed to behave like that in someone else's codebase 😜
 
 <br>
 
 ## Gitpod: Automated Install
 
-The setup is really simple - just add this repository URL to your [Preferences in Gitpod's Dashboard](https://gitpod.io/preferences).
+The setup is really simple - just add this repository URL to your
+[Preferences in Gitpod's Dashboard](https://gitpod.io/preferences).
 
-Whenever you fire up a new workspace, Gitpod will clone and install the dotfiles for you ahead of time. This means you can get right into coding, rather than being forced to configure your terminal and such on each new workspace.
+Whenever you fire up a new workspace, Gitpod will clone and install the dotfiles for you ahead of time. This means you
+can get right into coding, rather than being forced to configure your terminal and such on each new workspace.
 
 <br>
 
 ### Updating Gitpod Preferences
 
-**Open your [Gitpod Dashboard](https://gitpod.io/dashboard)**, and add this url to the field at the **bottom of the page**:
+**Open your [Gitpod Dashboard](https://gitpod.io/dashboard)**, and add this url to the field at the **bottom of the
+page**:
 
        https://github.com/nberlette/dotfiles.git
 
-
 <img width="600" alt="" src="https://user-images.githubusercontent.com/11234104/163892596-e240193e-9fe0-442c-8f71-329c6d69dfe3.png">
-
 
 <br>
 
@@ -55,13 +61,17 @@ Whenever you fire up a new workspace, Gitpod will clone and install the dotfiles
 
 All the files will be located in `~/.dotfiles`, or `/home/gitpod/.dotfiles` inside a Gitpod Workspace.
 
-You might notice the `.git` folder is still intact; this gives you access to a truncated commit history, but more importantly it allows us to pull/push new commits from our remote origin right from a running workspace. This makes it pretty painless to make changes, test them out in a real-world container, and push them upstream to Git. All from within a sandboxed environment. Dope.
+You might notice the `.git` folder is still intact; this gives you access to a truncated commit history, but more
+importantly it allows us to pull/push new commits from our remote origin right from a running workspace. This makes it
+pretty painless to make changes, test them out in a real-world container, and push them upstream to Git. All from within
+a sandboxed environment. Dope.
 
 <br>
 
 ### Updating a running workspace
 
-If you realize the remote origin received a new commit after you spun up a workspace, and you don't like to be running out-of-date code, just `cd` into the `.dotfiles` directory and pull the new commit(s):
+If you realize the remote origin received a new commit after you spun up a workspace, and you don't like to be running
+out-of-date code, just `cd` into the `.dotfiles` directory and pull the new commit(s):
 
 ```bash
 cd ~/.dotfiles && git pull
@@ -78,7 +88,10 @@ cd $THEIA_WORKSPACE_ROOT
 
 ### Something broken? Check the logs.
 
-If you're encountering a bug or something just isn't working correctly, you can check logs in two places. Gitpod stores a log file located at `~/.dotfiles.log`, which may shed some light on what's going on during the install process when your workspaces are being built. Otherwise, the `install.sh` script pipes its stderr to timestamped files inside of the `~/.dotfiles` folder:
+If you're encountering a bug or something just isn't working correctly, you can check logs in two places. Gitpod stores
+a log file located at `~/.dotfiles.log`, which may shed some light on what's going on during the install process when
+your workspaces are being built. Otherwise, the `install.sh` script pipes its stderr to timestamped files inside of the
+`~/.dotfiles` folder:
 
 ```bash
 # logs files are timestamped (seconds elapsed since unix epoch)
@@ -93,10 +106,10 @@ less .*.log
 
 <br>
 
-
 ## Manual Installation
 
-Want to install these dotfiles on an already-running workspace? That's cool too! Before proceeding to install them manually, you need to copy the files from this repository to your workspace.
+Want to install these dotfiles on an already-running workspace? That's cool too! Before proceeding to install them
+manually, you need to copy the files from this repository to your workspace.
 
 ### 1. Clone the repo
 

@@ -26,6 +26,11 @@
   "publishConfig": {
     "access": "public"
   },
+  "workspaces": [
+    "./",
+    "docs/",
+    "packages/*"
+  ],
   "eslintConfig": {
     "extends": [
       "@brlt"
@@ -35,9 +40,11 @@
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "brew install --quiet --overwrite shfmt &>/dev/null",
-    "test": "run-s check:*",
-    "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
+    "test": "pnpm -r run test; run-s check:*",
+    "build": "pnpm -r run build",
+    "dev": "pnpm -r run dev",
+    "lint": "pnpm -r run lint; eslint .",
+    "lint:fix": "pnpm -r run lint:fix; eslint --fix .",
     "clean": "npx -q -y rimraf node_modules _installs .backup .*.log",
     "shfmt": "shfmt -ci -bn -sr -kp -fn -ln=bash -i 4 -s",
     "shellcheck": "shellcheck --color=always --shell=bash -x",
@@ -65,5 +72,15 @@
     "tsup": "^6.0.1",
     "typescript": "^4.7.2",
     "zx": "^6.1.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@types/react",
+        "react",
+        "react-dom",
+        "vue"
+      ]
+    }
   }
 }

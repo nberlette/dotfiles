@@ -64,3 +64,6 @@ export PNPM_HOME="${PNPM_HOME:-"$(dirname -- "$(which pnpm)")"}"
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 # do not show env hints during homebrew install process
 export HOMEBREW_NO_ENV_HINTS=1
+
+# tell terminal.app to shut the fuck up about switching the shell to zsh
+export BASH_SILENCE_DEPRECATION_WARNING=1

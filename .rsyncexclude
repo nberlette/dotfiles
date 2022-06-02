@@ -34,6 +34,11 @@ gitconfig
 # ignore oneself
 .rsync*
 
+# temporary bugfix
+.bashrc.d/base.sh
+.bashrc.d/config.sh
+.bashrc.d/logging.sh
+
 # package.json etc
 package*.json
 pnpm-lock.yaml

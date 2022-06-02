@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-## .bashrc                                    Nicholas Berlette, 2022-05-21 ##
+## .bashrc                                    Nicholas Berlette, 2022-06-01 ##
 ## ------------------------------------------------------------------------ ##
 ##         https://github.com/nberlette/dotfiles/blob/main/.bashrc          ##
 ## ------------------------------------------------------------------------ ##
@@ -47,7 +47,6 @@ if type dedupe_path &>/dev/null; then
 fi
 
 # make sure our gitconfig is up to date
-
 # user.name, user.email, user.signingkey
 if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
   if [ -n "$GIT_COMMITTER_NAME" ] || [ -n "$GIT_AUTHOR_NAME" ]; then
@@ -58,6 +57,22 @@ if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user
   fi
   if [ -z "$(git config --global user.signingkey)" ]; then
     git config --global user.signingkey "${GPG_KEY_ID:-"$GIT_COMMITTER_EMAIL"}"
+  fi
+fi
+
+# super janky way to skirt around gitpod's 120 second timeout on dotfiles installs
+# I'll get around to a better solution.... someday
+if [ -e ~/.DOTFILES_BREW_BUNDLE ]; then
+  rm -f ~/.DOTFILES_BREW_BUNDLE &>/dev/null
+  if [[ $- == *i* ]]; then
+    read -r -n 1 -i y -t 60 -p $'\n\033[0;1;5;33m ☢︎ \033[0;1;31m WARNING!\033[0m\n\n\033[2;3;91mThe dotfiles installer created a .Brewfile of recommended packages to install.\nThe downside, however, is this installation could take 5 minutes to complete.\033[0;3;31m\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (respond within 60s or \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+    # if the user says yes, or force, run the install
+    if (($? > 128)) || [[ $REPLY == [Yy]* ]]; then
+      echo ''
+      DOTFILES_SKIP_HOME=1 DOTFILES_SKIP_NODE=1 DOTFILES_BREW_BUNDLE=1 ~/.dotfiles/install.sh
+    else
+      echo -e '\n\n\033[1;31mSkipped Brewfile installation.\033[0m\n'
+    fi # $REPLY
   fi
 fi
 

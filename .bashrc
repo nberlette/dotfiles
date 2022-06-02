@@ -15,36 +15,30 @@ export SHELL="$shell"
 # if [ -z "${DOTFILES_INITIALIZED:+x}" ]; then
 # source the .path file to make sure all programs and functions are accessible
 # this also sources our core.sh file. and if it cant be found, it fails. HARD.
-if [ -r ~/.path ]; then {
+if [ -r ~/.path ]; then
   # shellcheck source=/dev/null
-  source ~/.path 2>/dev/null || source "${DOTFILES_PREFIX:-"$HOME/.dotfiles"}/.path" 2>/dev/null
-} || exit $?; fi
+  { source ~/.path 2>/dev/null || source "${DOTFILES_PREFIX:-"$HOME/.dotfiles"}/.path" 2>/dev/null; } || exit $?;
+fi
 
+# include all files in .bashrc.d folder
+src ~/.bashrc.d/*
 # import all vars from .env + .extra into current environment
 srx ~/.{env,extra} "${PWD-}"/.{env,env.d}
-
 # include our core bash environment
 src ~/.{exports,functions,bash_aliases}
-
 # ruby version manager, cargo (rust), nix
 src ~/.rvm/scripts/rvm ~/.cargo/env ~/.nix-profile/etc/profile.d/nix.sh
-
 # bash completion
 src "$HOMEBREW_PREFIX/etc/bash_completion.d" 2>/dev/null
-
+# lesspipe
 which lesspipe &>/dev/null && eval "$(SHELL="$shell" lesspipe)"
-
-# color codes for ls, grep, etc.
+# dircolors: attractive color coded output for ls, grep, etc.
 if which dircolors &>/dev/null; then
   [ -r ~/.dircolors ] && eval "$(dircolors -b ~/.dircolors 2>/dev/null)" || eval "$(dircolors -b)"
 fi
-
-export PATH="${HOMEBREW_PREFIX:+"$HOMEBREW_PREFIX/bin:"}$PATH"
-
+# export PATH="${HOMEBREW_PREFIX:+"$HOMEBREW_PREFIX/bin:"}$PATH"
 # clean up $PATH
-if type dedupe_path &>/dev/null; then
-  export PATH="$(dedupe_path)"
-fi
+if hash dedupe_path &>/dev/null; then export PATH="$(dedupe_path)"; fi
 
 # make sure our gitconfig is up to date
 # user.name, user.email, user.signingkey
@@ -63,7 +57,9 @@ fi
 # super janky way to skirt around gitpod's 120 second timeout on dotfiles installs
 # I'll get around to a better solution.... someday
 if [ -e ~/.DOTFILES_BREW_BUNDLE ]; then
-  rm -f ~/.DOTFILES_BREW_BUNDLE &>/dev/null
+  # shellcheck source=/dev/null
+  source ~/.DOTFILES_BREW_BUNDLE 2>/dev/null;
+
   if [[ $- == *i* ]]; then
     read -r -n 1 -i y -t 60 -p $'\n\033[0;1;5;33m ☢︎ \033[0;1;31m WARNING!\033[0m\n\n\033[2;3;91mThe dotfiles installer created a .Brewfile of recommended packages to install.\nThe downside, however, is this installation could take 5 minutes to complete.\033[0;3;31m\033[0m\n\n\033[0;1;4;33mAccept and continue?\033[0;2m (respond within 60s or \033[1m"Yes"\033[0;2m is assumed)\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
     # if the user says yes, or force, run the install

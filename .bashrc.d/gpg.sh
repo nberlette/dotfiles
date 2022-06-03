@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-05-19  ##
+##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-06-02  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/gpg.sh        ##
 ## ------------------------------------------------------------------------ ##
@@ -85,4 +85,4 @@ function gpg_init()
 
 export GPG_TTY=$(tty)
 
-[ -n "${GPG_KEY+x}" ] && [ -z "${GPG_CONFIGURED+x}" ] && __gpg_setup 2> /dev/null
+[ -n "${GPG_KEY:+x}" ] && [ -z "${GPG_CONFIGURED:+x}" ] && __gpg_setup 2>/dev/null

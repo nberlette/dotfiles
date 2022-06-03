@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  .bashrc.d/core.sh                        Nicholas Berlette, 2022-06-01  ##
+##  .bashrc.d/core.sh                        Nicholas Berlette, 2022-06-02  ##
 ## ------------------------------------------------------------------------ ##
 ##    https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/core.sh     ##
 ## ------------------------------------------------------------------------ ##
@@ -120,43 +120,6 @@ function dedupe_path()
 
 	[ -n "$print_val" ] \
 		&& echo -n "$deduped_path"
-}
-
-function print_banner()
-{
-	local message divider i
-	case "${1-}" in
-		step)
-			printf '\n\033[1;2m(step #%d) \033[0;1m%s\033[0m\n' "$STEP_NUM" "${*:2}"
-			((STEP_TOTAL++))
-			;;
-		*)
-			divider="" divider_char="-"
-			if (($# > 1)) && [ -n "$2" ]; then
-				divider_char="${1:-"-"}"
-				message="${*:2}"
-			else
-				message="${*:-"Beginning dotfiles installation"}"
-			fi
-			for ((i = 0; i < 80; i++)); do
-				divider+="${divider_char:-"="}"
-			done
-			printf '\n\033[1m %s \033[0m\n\033[2m%s\033[0m\n' "${message-}" "${divider-}"
-			;;
-	esac
-}
-
-# shellcheck disable=SC2120
-function print_step_complete()
-{
-	if (($# > 0)); then
-		printf '\n\033[1;48;2;40;60;66;38;2;240;240;240m %s \033[0;2;3m %s\n\n' "${1-}" "${*:2}"
-	else
-		# display the completed step number and total number of steps
-		echo -e '\n\033[1;32m ✓ \033[0;32;3mCompleted step '"$STEP_NUM"'.\033[0m\n'
-		# increment step number by 1
-		((STEP_NUM++))
-	fi
 }
 
 # check for global_add

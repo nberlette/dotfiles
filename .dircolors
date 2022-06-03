@@ -1,3 +1,22 @@
+## ------------------------------------------------------------------------ ##
+##  .dircolors                                                  2022-06-02  ##
+## ------------------------------------------------------------------------ ##
+##                                                                          ##
+##  Formatted into two columns of text, separated with whitespace.          ##
+##   - The left column is file types (or extensions) in glob format.        ##
+##   - The right column are the ANSI color codes for each file type.        ##
+##                                                                          ##
+##  @note The first character of each line *must* be an asterisk ("*").     ##
+##  Otherwise, an error is thrown on every call that requires $LS_COLORS.   ##
+##                                                                          ##
+##  @example  *.gitignore          38;5;240                                 ##
+##                                                                          ##
+## ------------------------------------------------------------------------ ##
+##        https://github.com/nberlette/dotfiles/blob/main/.dircolors        ##
+## ------------------------------------------------------------------------ ##
+##              MIT © Nicholas Berlette <nick@berlette.com>                 ##
+## ------------------------------------------------------------------------ ##
+
 *.7z                   38;5;40
 *.WARC                 38;5;40
 *.a                    38;5;40

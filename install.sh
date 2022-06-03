@@ -203,10 +203,10 @@ function setup_brew()
 {
 	local HOMEBREW_BUNDLE_FILE
   # install homebrew if not already installed
-  command -v brew &>/dev/null && homebrew_install
+  command -v brew &>/dev/null || homebrew_install
 
 	# set our brewfile location
-	export HOMEBREW_BUNDLE_FILE="$(realpath -eLq "${DOTFILES_PREFIX-}/.Brewfile" 2> /dev/null || echo -n "$DOTFILES_PREFIX/.Brewfile")"
+	export HOMEBREW_BUNDLE_FILE="$(curdir)/.Brewfile"
 
 	# don't install when we're in a noninteractive environment (read: gitpod dotfiles setup task)
 	# otherwise this usually takes > 120s and fails hard thanks to gitpod's rather unreasonable time limit.
@@ -215,17 +215,13 @@ function setup_brew()
 		# for developing jekyll sites (and other things for github pages, etc)
 		# for macOS
 		if [ "$IS_DARWIN" = 1 ]; then
-			export HOMEBREW_BUNDLE_FILE="$(realpath -eLq "${DOTFILES_PREFIX-}/.osx/.Brewfile" 2> /dev/null || echo -n "$DOTFILES_PREFIX/.osx/.Brewfile")"
+			export HOMEBREW_BUNDLE_FILE="$(curdir)/.osx/.Brewfile"
 			{
 				command -v rvm &> /dev/null || curl -fsSL https://get.rvm.io | bash -s stable --rails
 			} 2>&1
-			export SHELL="${HOMEBREW_PREFIX:-}/bin/bash"
+			export SHELL="$(which bash)"
 		fi
 	fi
-
-  # if command -v gem &> /dev/null; then
-	# 	gem install jekyll bundler
-  # fi
 
 	if [ -f "$HOMEBREW_BUNDLE_FILE" ] && [ -r "$HOMEBREW_BUNDLE_FILE" ]; then
 		# make sure its executable...
@@ -344,16 +340,8 @@ function main()
   fi
 
   if which brew &>/dev/null; then
-    brew install --overwrite rsync coreutils >> "$DOTFILES_LOG" 2>&1
+    brew install --overwrite rsync coreutils starship gh >> "$DOTFILES_LOG" 2>&1
   fi
-	# if we are in a github codespaces environment, skip homebrew setup for now.
-	# currently the homebrew installer breaks due to a git syntax error in their code. works fine in gitpod though. 🤔
-	if [ -z "${CODESPACES:+x}" ]; then
-		brew install --quiet --overwrite starship gh >> "$DOTFILES_LOG" 2>&1
-	else
-		# STEP_TOTAL=2 # adjust step total since we're skipping homebrew
-		curl -fsSL https://starship.rs/install.sh | sh -
-	fi
 
 	if [ -z "${DOTFILES_SKIP_NODE:+x}" ]; then
     if [ -n "${IS_INTERACTIVE:+x}" ]; then
@@ -389,7 +377,7 @@ function main()
   fi
 
   # skip brew bundle on initial install. we'll do it later.
-  if [ -n "${DOTFILES_BREW_BUNDLE:+x}" ]; then
+  if [ -n "${DOTFILES_BREW_BUNDLE:+x}" ] || [ -e ~/.DOTFILES_BREW_BUNDLE ]; then
     [ -e ~/.DOTFILES_BREW_BUNDLE ] && rm -f ~/.DOTFILES_BREW_BUNDLE &> /dev/null;
 
     if [ -n "${IS_INTERACTIVE:+x}" ]; then

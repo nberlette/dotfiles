@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-06-02  ##
+##  .bashrc.d/gpg.sh                         Nicholas Berlette, 2022-06-08  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/gpg.sh        ##
 ## ------------------------------------------------------------------------ ##
@@ -83,6 +83,25 @@ function gpg_init()
 		|| printf '\033[1;31m %s\033[0m\n' '🛑 🔒 GPG failed to unlock! Bad passphrase?'
 }
 
+function __gpg_count_keys()
+{
+  local key_id=""
+  if [ -n "$1" ]; then
+    key_id="$1"; shift;
+    # shellcheck disable=SC2005
+    echo "$(gpg -K "${key_id:+$key_id}" | grep sec --count 2>/dev/null)" | tr -d $'\n'
+  else
+    # shellcheck disable=SC2005
+    echo "$(gpg -K | grep sec --count 2>/dev/null)" | tr -d $'\n'
+  fi
+}
+
 export GPG_TTY=$(tty)
 
-[ -n "${GPG_KEY:+x}" ] && [ -z "${GPG_CONFIGURED:+x}" ] && __gpg_setup 2>/dev/null
+# check if our GPG key and key id have been set in the environment
+if [[ -n "${GPG_KEY:+x}" || -n "${GPG_PRIVATE_KEY:+x}" ]] && [ -n "$GPG_KEY_ID" ]; then
+    # check if the secret key has been configured with gpg
+    if [ "$(__gpg_count_keys "${GPG_KEY_ID-}")" -gt 0 ]; then
+      __gpg_setup 2> /dev/null
+    fi
+fi

@@ -47,13 +47,15 @@
 
 	ll = "!_git_ll() { git log \"--max-count=${1-25}\" --date='format:%F %R:%S' \"--pretty=tformat:[%C(yellow)%h%C(reset)] [%C(blue)%><(13)%ar%C(reset)] [%C(red)%><(28)%an%C(reset)] %C(reset)%s\"; }; _git_ll"
 
-	# Requires GitHub CLI (https://hub.github.com/)
-	llu = "!_git_llu() { COMMIT_URL=\"$(hub browse --url)/commit\"; git log \"--max-count=${1-25}\" --date='format:%F %R:%S' \"--pretty=tformat:[%C(yellow)${COMMIT_URL}/%h%C(reset)] [%C(blue)%><(13)%ar%C(reset)] [%C(red)%><(28)%an%C(reset)] %C(reset)%s\"; }; _git_llu"
+	# Requires GitHub CLI (https://cli.github.com/)
+	llu = "!_git_llu() { COMMIT_URL=\"$(gh repo view --json url -q .url)/commit\"; git log \"--max-count=${1-25}\" --date='format:%F %R:%S' \"--pretty=tformat:[%C(yellow)${COMMIT_URL}/%h%C(reset)] [%C(blue)%><(13)%ar%C(reset)] [%C(red)%><(28)%an%C(reset)] %C(reset)%s\"; }; _git_llu"
 
 	m = merge
 
-	# Requires GitHub CLI (https://hub.github.com/)
-	o = browse
+	# Requires GitHub CLI (https://cli.github.com/)
+	o = !bash -c 'gh repo view $0 $@'
+  	ow = o --web
+	oj = !bash -c 'gh repo view --json $0 $@'
 
 	p = pull --prune
 
@@ -66,8 +68,8 @@
 	pso  = push           origin
 	psvo = push --verbose origin
 
-	# Requires GitHub CLI (https://hub.github.com/)
-	pr = !bash -c 'hub pull-request $0 $@'
+	# Requires GitHub CLI (https://cli.github.com/)
+	pr = !bash -c 'gh pr $0 $@'
 	# pr = "!_git_pr() { hub pull-request $0 $@; }; _git_pr"
 
 	prune = fetch --all --prune

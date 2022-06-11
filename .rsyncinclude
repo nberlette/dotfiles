@@ -20,24 +20,41 @@
 .config/gh/config.yml
 .config/starship.toml
 
+# .local/ (if present)
+.local/
+.local/*
+
 # bash environment
 .bash*
-.hushlogin
-.inputrc
 .path
 .exports
 .extra
 .functions
 
-# .Brewfile
-.Brewfile
-./*/.Brewfile
+# zsh environment (if present)
+.zsh*
+.zprofile
+.zsh_aliases
+.zshrc.d/*
 
-# .dircolors
-# Used by (dircolors -b) to set the color of the ls output.
+# .env files, .env.d/ folder (if present)
+.env.d/*
+.env*
+
+# quiet any shell login messages
+.hushlogin
+
+# configure keyboard input
+.inputrc
+
+# .Brewfile and .osx/.Brewfile
+.Brewfile
+*/.Brewfile
+
+# .dircolors- used by (dircolors -b) to set the color of the ls output.
 .dircolors
 
-# editorconfig files (overrides prettier and eslint configurations!)
+# editorconfig - (overrides prettier and eslint configurations!)
 .editorconfig
 
 # .nirc - config file for @antfu/ni and @brlt/n command line package
@@ -46,3 +63,6 @@
 # .npmrc - opinionated configurations for npm, yarn, and pnpm
 # (node package management command line tools)
 .npmrc
+
+# .nuxtrc - globally disable nuxt v3 telemetry prompts (annoying af)
+.nuxtrc

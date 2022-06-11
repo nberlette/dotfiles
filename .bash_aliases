@@ -1,15 +1,30 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .bash_aliases                            Nicholas Berlette, 2022-05-11  ##
+##  .bash_aliases                            Nicholas Berlette, 2022-06-10  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.bash_aliases           ##
 ## ------------------------------------------------------------------------ ##
 
-# make sure our .bin dir is in the PATH
-if ! type -p osc &>/dev/null; then
-  export PATH="$HOME/.bin:${DOTFILES_PREFIX:-"$HOME/.dotfiles/.bin"}:$PATH"
-fi
+
+# shellcheck disable=SC2086,SC2034
+
+function osc() {
+  local esc esc1 esc2 esc3 str ifs
+  # various escape character sequences (\033 is the default)
+  esc1=$'\033'; esc2=$'\e'; esc3=$'\x1b'; esc=$esc1;
+  str=''; ifs=$IFS;
+  while [[ "$1" == -* ]]; do
+    [ "$1" = "-x" ] && { esc=$esc3; shift; }
+    [ "$1" = "-e" ] && { esc=$esc2; shift; }
+    [ "$1" = "-o" ] && { esc=$esc1; shift; }
+    continue;
+  done
+  IFS=';'; str="$*"; IFS=$ifs;
+  printf '%c[%sm' $esc "${str:-0}"
+}
+alias __osc="osc"
+
 
 alias bold="osc 01"
 alias undl="osc 04"
@@ -40,30 +55,13 @@ alias wht_b="osc 48 02 255 255 255"
 
 case "$(uname -s)" in
 Darwin)
-  # Mac specific aliases
   colorflag="-G --color=always"
-  export COLORTERM=1
-  export CLICOLOR_FORCE=$COLORTERM
-  export FORCE_COLOR=1
-  alias rebash="source \$HOME/.bash_profile"
-
-  # visual studio code
-  VSCODE_INSIDERS="/Applications/Visual Studio Code - Insiders.app"
-  VSCODE_RELEASE="/Applications/Visual Studio Code.app"
-  # shellcheck disable=SC2139
-  {
-    if [ -e "$VSCODE_INSIDERS" ]; then
-      alias code="open -a \"$VSCODE_INSIDERS\""
-    elif [ -e "$VSCODE_RELEASE" ]; then
-      alias code="open -a \"$VSCODE_RELEASE\""
-    fi
-  }
-
   # finder.app
   alias finder="open -a '/System/Library/CoreServices/Finder.app'"
-
+  alias dl="cd ~/Downloads"
   # google chrome
-  if ! which chrome &>/dev/null && [ -e "/Applications/Google Chrome.app" ]; then
+  if ! hash chrome &>/dev/null && [ -e "/Applications/Google Chrome.app" ]
+  then
     alias chrome="open -a '/Applications/Google Chrome.app'"
 
     # Kill all the tabs in Chrome to free up memory
@@ -72,8 +70,10 @@ Darwin)
   fi
 
   # iTerm2 (iTerm.app)
-  if [[ $TERM_PROGRAM == "iTerm.app" ]]; then
-    if type -t it2setcolor &>/dev/null; then
+  if [[ $TERM_PROGRAM == "iTerm.app" ]]
+  then
+    if type -t it2setcolor &>/dev/null
+    then
       # change to 'Dark Background' preset theme
       alias godark="it2setcolor preset 'Dark Background'"
       alias darkmode="godark"
@@ -93,7 +93,8 @@ Darwin)
       alias tabcolor="it2setcolor tab"
     fi
     # for macbook pro touchbar models
-    if type -t it2setkeylabel &>/dev/null; then
+    if type -t it2setkeylabel &>/dev/null
+    then
       alias itouch="it2setkeylabel"
       alias touchbar="it2setkeylabel"
       alias touchpush="it2setkeylabel push"
@@ -105,12 +106,10 @@ Darwin)
   ;;
 Linux)
   colorflag="--color=always"
-  export COLORTERM=1
-  export CLICOLOR_FORCE=$COLORTERM
-  export FORCE_COLOR=1
   if ! type -t xclip &>/dev/null; then
     brew install xclip &>/dev/null
   fi
+
   alias pbcopy='xclip -selection clipboard'
   alias pbpaste='xclip -selection clipboard -o'
   alias open="xdg-open"
@@ -159,38 +158,35 @@ alias gitdm="git diff main.."
 alias gits="git status -uno"
 
 # Easier navigation: .., ..., ...., ....., ~ and -
-alias ..="cd .."
-alias ...="cd ../.."
-alias ....="cd ../../.."
-alias .....="cd ../../../.."
-alias ~="cd ~" # `cd` is probably faster to type though
+alias ".."="cd .."
+alias "..."="cd ../.."
+alias "...."="cd ../../.."
+alias "....."="cd ../../../.."
+alias "~"="cd ~" # `cd` is probably faster to type though
 alias -- -="cd -"
 
 # Shortcuts
-alias dl="cd ~/Downloads"
 alias g="git"
 alias h="history"
 alias gc='. $(type -t gitdate) && git commit -v '
 
-# Always use color output for `ls`
-if type -t gls &>/dev/null; then
-  # shellcheck disable=SC2139
-  alias ls="command gls ${colorflag-}"
-else
-  alias ls="command ls ${colorflag-}"
-fi
-# List all files colorized in long format
 # shellcheck disable=SC2139
+{
+  # Always use color output for `ls`
+  if type -t gls &>/dev/null; then
+    alias ls="command gls ${colorflag-}"
+  else
+    alias ls="command ls ${colorflag-}"
+  fi
+  # List all files colorized in long format
+  alias ll="ls -FAHlosh ${colorflag-}"
 
-alias ll="ls -FAHlosh ${colorflag-}"
+  # List all files colorized in long format, including dot files
+  alias la="ls -loFAhHk -sa ${colorflag-}"
 
-# List all files colorized in long format, including dot files
-# shellcheck disable=SC2139
-alias la="ls -loFAhHk -sa ${colorflag-}"
-
-# List only directories
-# shellcheck disable=SC2139
-alias lsd="ls -lhF ${colorflag} | grep --color=always '^d'"
+  # List only directories
+  alias lsd="ls -lhF ${colorflag} | grep --color=always '^d'"
+}
 
 # Always enable colored `grep` output
 alias grep='grep --color=auto '
@@ -200,9 +196,6 @@ alias sudo='sudo '
 
 # Get week number
 alias week='date +%V'
-
-# Stopwatch
-alias timer='echo "Timer started. Stop with Ctrl-D." && date && time cat && date'
 
 # IP addresses
 alias pubip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -217,22 +210,19 @@ alias sniff="sudo ngrep -d 'en1' -t '^(GET|POST) ' 'tcp and port 80'"
 alias httpdump="sudo tcpdump -i en1 -n -s 0 -w - | grep -a -o -E \"Host\\: .*|GET \\/.*\""
 
 # Canonical hex dump; some systems have this symlinked
-type -p hexdump &>/dev/null &&
-  command -v hd >/dev/null || alias hd="hexdump -C"
+if hash hexdump &>/dev/null && command -v hd &>/dev/null; then alias hd="hexdump -C"; fi
 
 # OS X has no `md5sum`, so use `md5` as a fallback
-type -p md5 &>/dev/null &&
-  command -v md5sum >/dev/null || alias md5sum="md5"
+if hash md5 &>/dev/null && command -v md5sum &>/dev/null; then alias md5sum="md5"; fi
 
 # OS X has no `sha1sum`, so use `shasum` as a fallback
-type -p shasum &>/dev/null &&
-  command -v sha1sum >/dev/null || alias sha1sum="shasum"
+if hash shasum &>/dev/null && command -v sha1sum &>/dev/null; then alias sha1sum="shasum"; fi
 
 # Trim new lines and copy to clipboard
 alias trc="tr -d '\\n' | pbcopy"
 
 # URL-encode strings
-if type -p python &>/dev/null; then
+if hash python &>/dev/null; then
   alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
 fi
 
@@ -274,8 +264,17 @@ alias success='status success'
 alias failure='status failure'
 alias warning='status warning'
 
-# Brew
-alias brewup='brew update; brew upgrade; brew prune; brew cleanup; brew doctor'
+# Stopwatch
+alias timer='echo -e "\e[0;1;93mTimer started. Ctrl-D to stop.\e[0m\n" && date && time cat && date'
+
+# Homebrew
+# alias brewup='brew update && brew upgrade; brew prune 2>/dev/null; brew cleanup brew doctor'
+function brewup()
+{
+  for cmd in update upgrade prune cleanup doctor
+    do brew "$cmd" 2>/dev/null || print_error "brewup failed on step \e[3;4mbrew ${cmd-}"
+  done
+}
 
 alias c='clear'
 # shellcheck disable=SC2139
@@ -294,9 +293,7 @@ alias rimraf='rm -rf'
 alias cpr='cp -R'
 alias mkdir='mkdir -p'
 alias ln='ln -v'
-
-# dirs and files
-alias "cd.."="cd .."
+alias 'cd..'="cd .."
 alias t='touch'
 
 # git
@@ -308,13 +305,13 @@ alias ingore='git ignore'
 # ruby hack
 alias gem='sudo gem'
 
-# terrible names
+# aliases with extremely unfortunate nomenclature
 alias pig='pnpm i -g'
 alias nig='npm i -g'
 alias yag='yarn global add'
 
-# shellcheck source=/dev/null
-alias pip2="$(type -t pip)"
+# shellcheck disable=SC2139
+alias pip2="$(which pip 2>/dev/null || echo -n pip)"
 alias pip='pip3'
 alias python='python3'
 alias venv="source '\$HOME/.venv/bin/activate'"
@@ -332,22 +329,22 @@ if type -t yarn &>/dev/null; then
   alias yporn='yarn --prefer-offline' # ynot?
 fi
 
-# NODE.JS
+# NODE REPL / 'node' CLI INVOCATIONS
 if type -t node &>/dev/null; then
-  # node flags / options / etc.
-  NODE_FLAGS=${NODE_FLAGS:-"--experimental-import-meta-resolve --experimental-json-modules --experimental-repl-await --experimental-specifier-resolution=node --experimental-vm-modules --max-old-space-size=4096 "} # --no-warnings --no-warnings-experimental-mode
+  # Command Line Flags for Node.js v16.15.0
+  __NODE_FLAGS=${NODE_FLAGS:-"--experimental-import-meta-resolve --experimental-json-modules --experimental-repl-await --experimental-specifier-resolution=node --experimental-vm-modules --max-old-space-size=4096 "} # --no-warnings --no-warnings-experimental-mode
   alias esnode="node --trace-warnings \$NODE_FLAGS"
   alias nodetsm="node --loader tsm -r dotenv/config \$NODE_FLAGS"
 fi
 
-# CLOUDFLARE: flarectl CLI
+# CLOUDFLARE CLI (flarectl)
 if type -t flarectl &>/dev/null; then
   alias flare="flarectl"
   alias cf=flarectl
   alias railgun="flarectl railgun"
 fi
 
-# CLOUDFLARE: wrangler CLI
+# CLOUDFLARE WORKERS CLI (wrangler)
 if type -t wrangler &>/dev/null; then
   alias wr="wrangler"
   alias pages="wrangler pages"
@@ -357,6 +354,7 @@ if type -t wrangler &>/dev/null; then
   alias kvbulk="wrangler kv:bulk"
 fi
 
+# NEOVIM (nvim)
 if type -t nvim >/dev/null 2>&1; then
   alias vim="nvim"
   alias vi="nvim"
@@ -367,7 +365,7 @@ else
   alias v="vim"
 fi
 
-# aws aliases
+# AWS CLI (aws)
 if type -t aws &>/dev/null; then
   alias ls3='aws s3 ls --human-readable --summarize'
   alias rls3='aws s3 ls --recursive'
@@ -383,7 +381,8 @@ if type -t aws &>/dev/null; then
   unset -v aws_cmd
 fi
 
-if ! hash docker &>/dev/null; then
+# DOCKER CLI (docker)
+if type -tab docker &>/dev/null; then
   alias dk='docker'
   alias dkit='docker -it'
   alias dkr='docker run -it'
@@ -393,8 +392,8 @@ if ! hash docker &>/dev/null; then
   alias dkpull='docker pull'
 fi
 
-# GitHub CLI commands and shorthands
-if type gh &>/dev/null; then
+# GitHub CLI (gh)
+if type -t gh &>/dev/null; then
   alias mkgist="gh gist create"
   alias rmgist="gh gist delete"
   alias gisted='gh gist edit'

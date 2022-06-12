@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .bash_aliases                            Nicholas Berlette, 2022-06-10  ##
+##  .bash_aliases                            Nicholas Berlette, 2022-06-11  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.bash_aliases           ##
 ## ------------------------------------------------------------------------ ##
-
-
 # shellcheck disable=SC2086,SC2034
 
 function osc() {
@@ -305,28 +303,28 @@ alias ingore='git ignore'
 # ruby hack
 alias gem='sudo gem'
 
+# pnpm shorthand commands
+if hash pnpm &>/dev/null; then
+  alias pig='pnpm add --global'
+  alias pug='pnpm remove --global'
+  alias pv='pnpm view'
+fi
+
+# shorthands for shorthands (see @brlt/n, my fork of @antfu/ni)
+if hash ni &>/dev/null; then
 # aliases with extremely unfortunate nomenclature
-alias pig='pnpm i -g'
-alias nig='npm i -g'
-alias yag='yarn global add'
-
-# shellcheck disable=SC2139
-alias pip2="$(which pip 2>/dev/null || echo -n pip)"
-alias pip='pip3'
-alias python='python3'
-alias venv="source '\$HOME/.venv/bin/activate'"
-
-# YARN PACKAGE MANAGER
-if type -t yarn &>/dev/null; then
-  alias yarn="yarn --ignore-optional --ignore-platform --ignore-engines -s"
-  alias yag='yarn global add'
-  alias yg='yarn global'
-  alias yga='yg add --ignore-platform --ignore-optional'
-  alias ygr='yg remove'
-  alias ya='yarn add --ignore-platform --ignore-optional'
-  alias yr='yarn remove'
-  alias yorn='yarn --offline'
-  alias yporn='yarn --prefer-offline' # ynot?
+  # install packages (global)
+  alias nig='ni -g'
+  # outdated packages (global)
+  alias nog='no -g'
+  # package manager alias (global; nag bin -> pnpm -g bin or yarn global bin)
+  alias nag='na -g'
+  # updare (global)
+  alias nug='nu -g'
+  # uninstall/remove (global)
+  alias nung='nun -g'
+  # npm view | pnpm view
+  alias nvw='na view'
 fi
 
 # NODE REPL / 'node' CLI INVOCATIONS

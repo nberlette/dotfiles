@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  .bashrc.d/core.sh                        Nicholas Berlette, 2022-06-02  ##
+##  .bashrc.d/core.sh                        Nicholas Berlette, 2022-06-28  ##
 ## ------------------------------------------------------------------------ ##
 ##    https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/core.sh     ##
 ## ------------------------------------------------------------------------ ##
@@ -29,7 +29,6 @@ function src()
 {
 	local __file child
 	for __file in "$@"; do
-		__file="$(realpath -Lmq "$__file" 2> /dev/null || echo -n "$__file")"
 		if [ -r "$__file" ] && [ -f "$__file" ]; then
 			# shellcheck source=/dev/null
 			source "$__file"
@@ -47,7 +46,6 @@ function srx()
 {
 	local __file
 	for __file in "$@"; do
-		__file="$(realpath -Lmq "$__file" 2> /dev/null || echo -n "$__file")"
 		if [ -r "$__file" ]; then
 			set -a
 			src "$__file"

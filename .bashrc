@@ -24,7 +24,20 @@ src ~/.exports ~/.functions ~/.bash_aliases
 
 src ~/.rvm/scripts/rvm ~/.cargo/env ~/.nix-profile/etc/profile.d/nix.sh
 
-src "$HOMEBREW_PREFIX/etc/bash_completion.d" 2>/dev/null
+src "$HOMEBREW_PREFIX/etc/bash_completion.d"
+
+# bash completions
+src /etc/bash_completion /etc/bash_completion.d
+
+# github cli completions
+if which gh &>/dev/null; then
+  eval "$(gh completion -s bash 2>/dev/null)"
+fi
+
+# supabase cli completions
+if which supabase &>/dev/null; then
+  eval "$(supabase completion bash 2>/dev/null)"
+fi
 
 which lesspipe &>/dev/null && eval "$(SHELL="$shell" lesspipe)"
 

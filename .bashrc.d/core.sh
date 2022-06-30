@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  .bashrc.d/core.sh                        Nicholas Berlette, 2022-06-28  ##
+##  .bashrc.d/core.sh                        Nicholas Berlette, 2022-06-30  ##
 ## ------------------------------------------------------------------------ ##
 ##    https://github.com/nberlette/dotfiles/blob/main/.bashrc.d/core.sh     ##
 ## ------------------------------------------------------------------------ ##
@@ -27,13 +27,15 @@ fi
 # src - source multiple files or entire folders recursively, with sanity checks.
 function src()
 {
-	local __file child
-	for __file in "$@"; do
-		if [ -r "$__file" ] && [ -f "$__file" ]; then
+	local pathname child
+	for pathname in "$@"; do
+		if [ -r "$pathname" ] && [ -f "$pathname" ]; then
 			# shellcheck source=/dev/null
-			source "$__file"
-		elif [ -d "$__file" ]; then
-			for child in "$__file"/**; do src "$child"; done
+			. "$pathname" 2>/dev/null || return $?
+		elif [ -d "$pathname" ]; then
+			for child in "$pathname"/**; do 
+				src "$child" 2>/dev/null || return $?
+			done
 		fi
 	done
 }
@@ -44,12 +46,10 @@ function src()
 # use with caution.
 function srx()
 {
-	local __file
-	for __file in "$@"; do
-		if [ -r "$__file" ]; then
-			set -a
-			src "$__file"
-			set +a
+	local pathname
+	for pathname in "$@"; do
+		if [ -r "$pathname" ]; then
+			set -a; src "$pathname"; set +a
 		fi
 	done
 }
@@ -63,33 +63,41 @@ function srx()
 #   $ dedupe_array_str ":" "PATH" # : is for splitting string into an array
 function dedupe_array_str()
 {
-	local OLD NEW _IFS="$IFS" SEP=":"
-	if [ -n "$1" ] && [ ${#1} -eq 1 ]; then
+	local OLD NEW SEP _IFS
+	if (($# > 0)) && [[ ${#1} == 1 ]]; then
 		SEP="${1:-":"}"
 		shift
 	fi
-	IFS="$SEP"
-	OLD="${*}"
-	IFS="$_IFS"
+	
+	_IFS="$IFS"; SEP=":"; IFS="$SEP"; OLD="${*}"; IFS="$_IFS"
 	NEW="$(perl -e 'print join("'"${SEP-}"'",grep { not $seen{$_}++ } split(/'"${SEP-}"'/, $ARGV[0]))' "$OLD")"
-	# now cleanup any lingering delimiters
-	NEW="${NEW#"$SEP"}"     # remove leading separators
-	echo -n "${NEW%"$SEP"}" # remove trailing separators, and print the result
+
+	NEW="${NEW#"$SEP"}"     # remove dangling delimiters from the beginning
+	echo -n "${NEW%"$SEP"}" # aaand from the ending, then print the results
 }
 
-########
-## functions used in .path to amend the $PATH variable
-########
+# Get the value of a variable by its name
 function get_var()
 {
 	eval 'printf "%s\n" "${'"$1"'}"'
 }
 
+# Set a variable's value (parameter 2) by its name (parameter 1)
 function set_var()
 {
 	eval "$1=\"\$2\""
 }
 
+# Remove any duplicate entries from the current environment's PATH value,
+# while preserving the original order of entries in the PATH.
+# Usage:
+#   $ dedupe_path [-p|--print] [-s|--set] [$PATH]
+#
+# Examples:
+#   $ dedupe_path -p  # ...will only print the deduped value
+#   $ dedupe_path -s  # ...shorthand equivalent of the following:
+#   $ export PATH="$(dedupe_path)"
+#
 function dedupe_path()
 {
 	local pathvar_value deduped_path print_val set_val
@@ -120,25 +128,26 @@ function dedupe_path()
 		&& echo -n "$deduped_path"
 }
 
-# check for global_add
-if ! hash global_add &> /dev/null; then
-	# installs all arguments as global packages
-	function global_add()
-	{
-		local pkg pkgs=("$@") agent=npm command="i -g"
-		if command -v yarn &> /dev/null; then
-			agent="$(command -v yarn)"
-			command="global add"
-		else
-			agent="$(command -v pnpm 2> /dev/null || command -v npm 2> /dev/null)"
-			command="i -g"
-		fi
-		$agent "$command" "${pkgs[@]}" &> /dev/null && {
-			echo "Installed with $agent:"
-			for pkg in "${pkgs[@]}"; do
-				echo -e "\\033[1;32m ✓ $pkg \\033[0m"
-				# || echo -e "\\033[1;48;2;230;30;30m 𐄂 ${pkg-}\\033[0m";
-			done
-		}
+# Globally install packages
+function global_add()
+{
+	local pkg pkgs=("$@") agent=npm command="i -g"
+	if command -v pnpm &> /dev/null; then
+		agent="$(command -v pnpm)"
+		command="i -g"
+	elif command -v yarn &> /dev/null; then
+		agent="$(command -v yarn)"
+		command="global add"
+	else
+		agent="$(command -v npm 2> /dev/null || echo -n npm)"
+		command="i -g"
+	fi
+	$agent "$command" "${pkgs[@]}" &> /dev/null && {
+		echo -e "\\033[1mGlobally installed with $agent:\\033[0m"
+		for pkg in "${pkgs[@]}"; do
+			echo -e "\\033[1;32m ✓ $pkg \\033[0m"
+			# || echo -e "\\033[1;48;2;230;30;30m 𐄂 ${pkg-}\\033[0m";
+		done
 	}
-fi
+}
+

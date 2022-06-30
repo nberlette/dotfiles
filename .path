@@ -2,22 +2,15 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  .path                                    Nicholas Berlette, 2022-05-11  ##
+##  .path                                    Nicholas Berlette, 2022-06-29  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.path                   ##
 ## ------------------------------------------------------------------------ ##
-
-[ -r ~/.bashrc.d/core.sh ] && {
-  # shellcheck source=/dev/null
-  . ~/.bashrc.d/core.sh 2>/dev/null
-} || exit $?
 
 export PATH="${PATH:-"$HOME/.bin:$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/sbin"}"
 
 HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-"$(brew --prefix)"}"
 export HOMEBREW_PREFIX
-
-src ~/.bashrc.d
 
 # go
 export GOPATH="$HOME/.go"
@@ -42,12 +35,6 @@ export BOOST_INCLUDE_DIR="${HOMEBREW_PREFIX-}/include"
 
 # bash completions
 # src /etc/bash_completion /etc/bash_completion.d
-
-# github cli completions
-eval "$(gh completion -s bash 2>/dev/null)"
-
-# supabase cli completions
-eval "$(supabase completion bash 2>/dev/null)"
 
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
 # platform-specific stuff
@@ -109,41 +96,46 @@ case "$os" in
   ;;
 esac
 
-# yarn
-export PATH="$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-
-if [ -z "$PNPM_HOME" ]; then
-  if [ -d "$HOME/.local/share/pnpm" ]; then
-    export PNPM_HOME="$HOME/.local/share/pnpm"
-  elif [ -d "$HOME/Library/pnpm" ]; then
-    export PNPM_HOME="$HOME/Library/pnpm"
-  else
-    export PNPM_HOME="$(dirname -- "$(which pnpm 2>/dev/null)")"
-  fi
-fi
-
-export PATH="${PNPM_HOME+"$PNPM_HOME:"}$PATH"
-
 # OpenSSL, coreutils, findutils, make, etc.
 export PATH="${HOMEBREW_PREFIX-}/opt/openssl/bin:$PATH"
 export LDFLAGS="$LDFLAGS -L${HOMEBREW_PREFIX-}/opt/openssl/lib"
 export CPPFLAGS="$CPPFLAGS -I${HOMEBREW_PREFIX-}/opt/openssl/include"
 export OPENSSL_ROOT_DIR="${HOMEBREW_PREFIX-}/opt/openssl"
 export PKG_CONFIG_PATH="${HOMEBREW_PREFIX-}/opt/openssl/lib/pkgconfig:$PKG_CONFIG_PATH"
-export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"
-export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
-export PATH="/usr/local/opt/make/libexec/gnubin:$PATH"
-export MANPATH="/usr/local/opt/make/libexec/gnuman:$MANPATH"
-export PATH="/usr/local/opt/findutils/libexec/gnubin:$PATH"
-export MANPATH="/usr/local/opt/findutils/libexec/gnuman:$MANPATH"
-export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
-export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
 
 # coreutils
-export PATH="${HOMEBREW_PREFIX-}/opt/coreutils/libexec/gnubin:$PATH"
+export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+if [ -d "${HOMEBREW_PREFIX:-/usr/local}/opt" ]; then
+  for utility in coreutils make findutils gnu-sed; do
+    # prepend utility bin to the path 
+    [ -d "${HOMEBREW_PREFIX:-/usr/local}/opt/${utility-}/libexec/gnubin" ] && 
+      export PATH="${HOMEBREW_PREFIX:-/usr/local}/opt/${utility-}/libexec/gnubin:$PATH";
+    # add the utility man pages to the MANPATH (if a manual exists)
+    [ -d "${HOMEBREW_PREFIX:-/usr/local}/opt/${utility-}/libexec/gnuman" ] &&
+      export MANPATH="${HOMEBREW_PREFIX:-/usr/local}/opt/${utility-}/libexec/gnubin:$MANPATH"
+  done
+fi
 
 # ~/.bin, ~/.local/bin, ~/.dotfiles/.bin
 export PATH="$HOME/.bin:$HOME/.local/bin:$HOME/.dotfiles/.bin:$PATH"
+
+# pnpm
+if [ -z "$PNPM_HOME" ]; then
+  # linux
+  if [ -d "$HOME/.local/share/pnpm" ]; then
+    export PNPM_HOME="$HOME/.local/share/pnpm"
+  # macos/darwin
+  elif [ -d "$HOME/Library/pnpm" ]; then
+    export PNPM_HOME="$HOME/Library/pnpm"
+  # windows...?
+  else
+    export PNPM_HOME="$(dirname -- "$(which pnpm 2>/dev/null)")"
+  fi
+fi
+export PATH="${PNPM_HOME:+"$PNPM_HOME:"}$PATH"
+
+# deno
+export DENO_HOME="$HOME/.deno/bin:$PATH"
 
 if type -t dedupe_path &>/dev/null; then
   export PATH="$(dedupe_path)"

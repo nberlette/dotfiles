@@ -199,3 +199,5 @@ typings/
 
 .backup
 
+# misc junk from gitpod?
+core.*

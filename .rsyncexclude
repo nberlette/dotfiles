@@ -15,6 +15,12 @@ LICENSE*
 README*
 license*
 readme*
+
+# assets and stuff
+.fonts
+.fonts/*
+.devcontainer/*
+.devcontainer
 *.md
 
 # lint
@@ -57,3 +63,5 @@ _installs/*
 .backup*
 .cache
 .cache/*
+core.*
+.osx

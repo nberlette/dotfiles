@@ -227,7 +227,7 @@ function setup_brew()
 		# make sure its executable...
 		[ -x "$HOMEBREW_BUNDLE_FILE" ] || chmod +x "$HOMEBREW_BUNDLE_FILE" 2> /dev/null
 		# and then execute it
-		brew bundle install "${verbosity-}" 2>&1
+		brew bundle install "${verbosity-}" --no-lock 2>&1
   else
     unset -v HOMEBREW_BUNDLE_FILE
 	fi
@@ -278,7 +278,11 @@ function setup_node()
 function setup_home()
 {
 	local rsyncfiles rsyncexclude rsyncinclude git_file
-	local -a rsyncargs=("-avh" "--recursive" "--perms" "--times" "--checksum" "--itemize-changes" "--human-readable" "--progress" "--log-file=$DOTFILES_LOG" "--backup" "--backup-dir=$DOTFILES_BACKUP_PATH")
+  # set the default locations for .rsyncfiles and .rsyncexclude files
+	rsyncexclude="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}/.rsyncexclude"
+	rsyncinclude="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}/.rsyncinclude"
+
+	local -a rsyncargs=("-avh" "--recursive" "--perms" "--times" "--checksum" "--itemize-changes" "--human-readable" "--progress" "--log-file=$DOTFILES_LOG" "--backup" "--backup-dir=$DOTFILES_BACKUP_PATH" "--include-from=${rsyncinclude-}" "--exclude-from=${rsyncexclude-}")
 
 	# first off, install rsync if it doesn't exist on the current system
 	if ! command -v rsync &> /dev/null; then
@@ -289,10 +293,6 @@ function setup_home()
 	# backup (preserving homedir structure), e.g. /home/gitpod/.dotfiles/.backup/home/gitpod/.bashrc~
 	[ -d "${DOTFILES_BACKUP_PATH-}" ] || mkdir -p -v "${DOTFILES_BACKUP_PATH-}" | tee -i -a "$DOTFILES_LOG" 2>&1
 
-	# set the default locations for .rsyncfiles and .rsyncexclude files
-	rsyncfiles="${DOTFILES_PREFIX-}/.rsyncfiles"
-	rsyncexclude="${DOTFILES_PREFIX-}/.rsyncexclude"
-	rsyncinclude="${DOTFILES_PREFIX-}/.rsyncinclude"
 
 	# .gitignore and .gitconfig are special!
 	# we have to rename them to avoid issues with git applying them to the repository
@@ -300,23 +300,12 @@ function setup_home()
 		{
 			[ -e ~/."$git_file" ] && mv -f -v ~/."$git_file" "${DOTFILES_BACKUP_PATH-}"
 		} | tee -i -a "$DOTFILES_LOG" 2>&1
-		rsync "${rsyncargs[@]}" "$git_file" ~/."$git_file"
+		command cp -f ./gitignore ~/.gitignore
+		command cp -f ./gitconfig ~/.gitconfig
 	done
 
-	# exclude files matching glob patterns in the file .dotfiles/.rsyncexclude
-	[ -n "${rsyncexclude-}" ] && [ -r "${rsyncexclude-}" ] \
-		&& rsyncargs+=(--exclude-from="${rsyncexclude-}")
-
-	# include files with glob patterns in the file .dotfiles/.rsyncinclude
-	[ -n "${rsyncinclude-}" ] && [ -r "${rsyncinclude-}" ] \
-		&& rsyncargs+=(--include-from="${rsyncinclude-}")
-
-	# explicitly list files to copy in .dotfiles/.rsyncfiles
-	[ -n "${rsyncfiles-}" ] && [ -r "${rsyncfiles-}" ] \
-		&& rsyncargs+=(--files-from="${rsyncfiles-}")
-
 	# now do the damn thang!
-	rsync "${rsyncargs[@]}" "$(curdir 2> /dev/null || echo -n "${DOTFILES_PREFIX:-"$HOME/.dotfiles"}")" "$HOME"
+	rsync "${rsyncargs[@]}" . ~
 
 	return 0
 }
@@ -347,7 +336,7 @@ function main()
     if [ -n "${IS_INTERACTIVE:+x}" ]; then
       print_banner step "$(printf 'Installing \033[1;4;31mPNPM\033[0;1m and \033[4;32mNode\033[0;1;2m v%s\033[0m' "${node_v:-LTS}")"
       # pin node.js to 16.x to prevent breaking errors in >= 17.x
-      { setup_node "16.15.0" | tee -i -a "$DOTFILES_LOG" 2>&1; } && print_step_complete
+      { setup_node "16.16.0" | tee -i -a "$DOTFILES_LOG" 2>&1; } && print_step_complete
     else
       setup_node "${node_v:-LTS}" | tee -i -a "$DOTFILES_LOG" 2>&1
     fi

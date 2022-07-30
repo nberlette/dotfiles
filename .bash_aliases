@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ## ------------------------------------------------------------------------ ##
-##  .bash_aliases                            Nicholas Berlette, 2022-06-11  ##
+##  .bash_aliases                            Nicholas Berlette, 2022-07-29  ##
 ## ------------------------------------------------------------------------ ##
 ##  https://github.com/nberlette/dotfiles/blob/main/.bash_aliases           ##
 ## ------------------------------------------------------------------------ ##
@@ -22,8 +22,6 @@ function osc() {
   printf '%c[%sm' $esc "${str:-0}"
 }
 alias __osc="osc"
-
-
 alias bold="osc 01"
 alias undl="osc 04"
 alias ital="osc 03"
@@ -51,8 +49,8 @@ alias mag_b="osc 01 45"
 alias cyn_b="osc 01 46"
 alias wht_b="osc 48 02 255 255 255"
 
-case "$(uname -s)" in
-Darwin)
+if [[ "$(uname -s)" == "Darwin" ]]
+then
   colorflag="-G --color=always"
   # finder.app
   alias finder="open -a '/System/Library/CoreServices/Finder.app'"
@@ -101,8 +99,8 @@ Darwin)
       alias statuskey="it2setkeylabel set status"
     fi
   fi
-  ;;
-Linux)
+elif [[ "$(uname -s)" == "Linux" ]]
+then
   colorflag="--color=always"
   if ! type -t xclip &>/dev/null; then
     brew install xclip &>/dev/null
@@ -112,33 +110,12 @@ Linux)
   alias pbpaste='xclip -selection clipboard -o'
   alias open="xdg-open"
   alias rebash="source \$HOME/.bashrc"
-  ;;
-esac
+else
+  :
+fi
 
-# @deprecated
-# protip for aliasing all gnupg methods to their proper place
-# for __ga in convert-keyring dirmngr dirmngr-client gpg gpg2 gpg-agent gpg-connect-agent gpg-error gpg-zip gpgconf gpgsm gpgsplit gpgtar gpgv kbxutil mpicalc watchgnupg starship gh fontforge; do
-#     if [ -x "/usr/local/bin/${__ga-}" ]; then
-#         # shellcheck disable=SC2139
-#         alias "${__ga-}"="/usr/local/bin/${__ga-}"
-#     else
-#         if [ -x "/usr/bin/${__ga}" ]; then
-#             sudo ln -sfn /usr/bin/"${__ga}" /usr/local/bin
-#         elif [ -x "/home/linuxbrew/.linuxbrew/bin/${__ga}" ]; then
-#             sudo ln -sfn /home/linuxbrew/.linuxbrew/bin/"${__ga}" /usr/local/bin
-#         elif [ -x "/opt/homebrew/bin/${__ga-}" ]; then
-#             sudo ln -sfn /opt/homebrew/bin/"${__ga-}" /usr/local/bin
-#         fi
-#     fi
-# done
-# unset -v __ga
-
-# Date formatting string for ls command (macOS)
-# dateflag="-D \$'  \e[2;3;4mM:\e[m%F\e[2mT\e[m%H\e[5m:\e[m%M\e[5m:\e[m%S\e[2m-%Z\e[m  '"
-# datetimesep=$'\e[2;3m at \e[m'
-# dateflag="-D \$' \\e[0;2;3mM:\\e[m \\e[2m%D\\e[m${datetimesep:- }\\e[2m%H\\e[5m:\\e[0;2m%M\\e[m '"
-
-# adapted from https://github.com/nicowilliams/env/blob/master/.kshaliases#L2-L16
+# adapted from
+# https://github.com/nicowilliams/env/blob/master/.kshaliases#L2-L16
 alias realias=". \$HOME/.bash_aliases"
 alias valias="\${EDITOR:-vi} \$HOME/.bash_aliases"
 alias rebash=". \$HOME/.bashrc"
@@ -208,13 +185,19 @@ alias sniff="sudo ngrep -d 'en1' -t '^(GET|POST) ' 'tcp and port 80'"
 alias httpdump="sudo tcpdump -i en1 -n -s 0 -w - | grep -a -o -E \"Host\\: .*|GET \\/.*\""
 
 # Canonical hex dump; some systems have this symlinked
-if hash hexdump &>/dev/null && command -v hd &>/dev/null; then alias hd="hexdump -C"; fi
+if hash hexdump &>/dev/null && command -v hd &>/dev/null; then
+  alias hd="hexdump -C";
+fi
 
 # OS X has no `md5sum`, so use `md5` as a fallback
-if hash md5 &>/dev/null && command -v md5sum &>/dev/null; then alias md5sum="md5"; fi
+if hash md5 &>/dev/null && command -v md5sum &>/dev/null; then
+  alias md5sum="md5";
+fi
 
 # OS X has no `sha1sum`, so use `shasum` as a fallback
-if hash shasum &>/dev/null && command -v sha1sum &>/dev/null; then alias sha1sum="shasum"; fi
+if hash shasum &>/dev/null && command -v sha1sum &>/dev/null; then
+  alias sha1sum="shasum";
+fi
 
 # Trim new lines and copy to clipboard
 alias trc="tr -d '\\n' | pbcopy"
@@ -368,7 +351,6 @@ if type -t aws &>/dev/null; then
   alias ls3='aws s3 ls --human-readable --summarize'
   alias rls3='aws s3 ls --recursive'
 
-  # aws cli shorthand
   for aws_cmd in s3 iam amplify apigateway appconfig ddb docdb dynamodb devicefarm ec2 ecr ecs lambda memorydb rds route53 ses sms sns sqs; do
     # shellcheck disable=SC2139
     {
@@ -401,4 +383,69 @@ if type -t gh &>/dev/null; then
   alias reponew='gh repo create'
   alias newrepo='gh repo create'
   alias mkrepo='gh repo create'
+fi
+
+# GitHub Codespaces (devcontainer) CLI
+if which devcontainer &>/dev/null; then
+  alias devcontainer='devcontainer --disable-telemetry';
+fi
+
+# Shorthand aliases for Supabase CLI functions - see supabase.co
+if which supabase &>/dev/null; then
+  # sb   = supabase
+  alias sb="supabase";
+  alias sbs="sb status";
+  alias sb_stat="sb status";
+  alias sb_up="sb start";
+  alias sb_down="sb stop";
+  # sbdb = supabase db
+  alias sbdb="sb db";
+  alias sbdb_branch="sb db branch"
+  alias sbdb_diff="sb db changes"
+  alias sbdb_commit="sb db commit"
+  alias sbdb_push="sb db push"
+  alias sbdb_reset="sb db reset"
+  alias sbdb_remote="sb db remote"
+  alias sbdb_switch="sb db switch"
+  # sbfn = supabase functions
+  alias sbfn="supabase functions";
+  # sbfn_{new,srv,dpl,del} = sb functions {new,serve,deploy,delete}
+  alias sbfn_new="sb functions new";
+  alias sbfn_srv="sb functions serve";
+  alias sbfn_dpl="sb functions deploy";
+  alias sbfn_del="sb functions delete";
+  # sbl, sb_link = supabase link
+  alias sbl="sb link";
+  alias sb_link="sb link";
+  # sbs,sb_sex ;) = supabase secrets list
+  alias sbs="sb secrets list";
+  alias sb_sex="sb secrets list";
+  # sbss = supabase secrets set
+  alias sbss="sb secrets set";
+  # sbsu = supabase secrets unset
+  alias sbsu="sb secrets unset";
+  # sbo, sb_orgs  = supabase orgs
+  alias sb_orgs="sb orgs list";
+  alias sbo="sb orgs list"
+  # sbp, sb_proj  = supabase projects
+  alias sb_proj="sb projects";
+  alias sbp="sb projects"
+  # sbh , sb_help = supabase help
+  alias sb_help="sb help";
+  alias sbh="sb help";
+  # sbi, sb_init  = supabase init
+  alias sb_init="sb init";
+  alias sbi="sb init";
+  # sbm, sb_mig   = supabase migration new
+  alias sb_mig="sb migration new";
+  alias sbm="sb migration new";
+  # sbg, sb_gen   = supabase gen
+  alias sb_gen="sb gen";
+  alias sbg="sb gen";
+  # sbt, sb_types = supabase gen types
+  alias sbt="sb gen types";
+  alias sb_types="sb gen types";
+  # sbts, sb_dts  = supabase gen types typescript
+  alias sbts="sb gen types typescript";
+  alias sb_dts="sb gen types typescript";
 fi

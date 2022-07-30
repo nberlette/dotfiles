@@ -201,3 +201,4 @@ typings/
 
 # misc junk from gitpod?
 core.*
+.netrc

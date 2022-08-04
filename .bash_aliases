@@ -394,10 +394,9 @@ fi
 if which supabase &>/dev/null; then
   # sb   = supabase
   alias sb="supabase";
-  alias sbs="sb status";
-  alias sb_stat="sb status";
-  alias sb_up="sb start";
-  alias sb_down="sb stop";
+  alias sb_status="sb status";
+  alias sb_start="sb start";
+  alias sb_stop="sb stop";
   # sbdb = supabase db
   alias sbdb="sb db";
   alias sbdb_branch="sb db branch"
@@ -411,19 +410,19 @@ if which supabase &>/dev/null; then
   alias sbfn="supabase functions";
   # sbfn_{new,srv,dpl,del} = sb functions {new,serve,deploy,delete}
   alias sbfn_new="sb functions new";
-  alias sbfn_srv="sb functions serve";
-  alias sbfn_dpl="sb functions deploy";
-  alias sbfn_del="sb functions delete";
+  alias sbfn_serve="sb functions serve";
+  alias sbfn_deploy="sb functions deploy";
+  alias sbfn_delete="sb functions delete";
   # sbl, sb_link = supabase link
-  alias sbl="sb link";
+  alias sbln="sb link";
   alias sb_link="sb link";
   # sbs,sb_sex ;) = supabase secrets list
   alias sbs="sb secrets list";
-  alias sb_sex="sb secrets list";
+  alias sbs_ls="sb secrets list";
   # sbss = supabase secrets set
-  alias sbss="sb secrets set";
+  alias sbs_set="sb secrets set";
   # sbsu = supabase secrets unset
-  alias sbsu="sb secrets unset";
+  alias sbs_unset="sb secrets unset";
   # sbo, sb_orgs  = supabase orgs
   alias sb_orgs="sb orgs list";
   alias sbo="sb orgs list"
@@ -443,9 +442,9 @@ if which supabase &>/dev/null; then
   alias sb_gen="sb gen";
   alias sbg="sb gen";
   # sbt, sb_types = supabase gen types
-  alias sbt="sb gen types";
   alias sb_types="sb gen types";
+  alias sbt="sb gen types";
   # sbts, sb_dts  = supabase gen types typescript
-  alias sbts="sb gen types typescript";
   alias sb_dts="sb gen types typescript";
+  alias sbts="sb gen types typescript";
 fi

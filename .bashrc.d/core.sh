@@ -31,10 +31,10 @@ function src()
 	for pathname in "$@"; do
 		if [ -r "$pathname" ] && [ -f "$pathname" ]; then
 			# shellcheck source=/dev/null
-			. "$pathname" 2>/dev/null || return $?
+			. "$pathname" 2> /dev/null || return $?
 		elif [ -d "$pathname" ]; then
-			for child in "$pathname"/**; do 
-				src "$child" 2>/dev/null || return $?
+			for child in "$pathname"/**; do
+				src "$child" 2> /dev/null || return $?
 			done
 		fi
 	done
@@ -49,7 +49,9 @@ function srx()
 	local pathname
 	for pathname in "$@"; do
 		if [ -r "$pathname" ]; then
-			set -a; src "$pathname"; set +a
+			set -a
+			src "$pathname"
+			set +a
 		fi
 	done
 }
@@ -68,8 +70,12 @@ function dedupe_array_str()
 		SEP="${1:-":"}"
 		shift
 	fi
-	
-	_IFS="$IFS"; SEP=":"; IFS="$SEP"; OLD="${*}"; IFS="$_IFS"
+
+	_IFS="$IFS"
+	SEP=":"
+	IFS="$SEP"
+	OLD="${*}"
+	IFS="$_IFS"
 	NEW="$(perl -e 'print join("'"${SEP-}"'",grep { not $seen{$_}++ } split(/'"${SEP-}"'/, $ARGV[0]))' "$OLD")"
 
 	NEW="${NEW#"$SEP"}"     # remove dangling delimiters from the beginning
@@ -150,4 +156,3 @@ function global_add()
 		done
 	}
 }
-

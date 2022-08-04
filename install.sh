@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## ------------------------------------------------------------------------ ##
-##  install.sh                               Nicholas Berlette, 2022-06-02  ##
+##  install.sh                               Nicholas Berlette, 2022-07-29  ##
 ## ------------------------------------------------------------------------ ##
 ##        https://github.com/nberlette/dotfiles/blob/main/install.sh        ##
 ## ------------------------------------------------------------------------ ##
@@ -39,6 +39,7 @@ fi
 
 # source the dotfiles core shell files
 DOTFILES_CORE="$(curdir 2> /dev/null || echo -n "$DOTFILES_PREFIX")/.bashrc.d/core.sh"
+
 # shellcheck source=/dev/null
 [ -r "$DOTFILES_CORE" ] && . "$DOTFILES_CORE"
 
@@ -55,10 +56,13 @@ declare -i STEP_TOTAL=1
 
 # export PNPM homedir to unify the virtual dependency store
 export PNPM_HOME="${PNPM_HOME:-"$(dirname -- "$(which pnpm)")"}"
+
 # do not automatically cleanup after installing homebrew packages
 export HOMEBREW_NO_INSTALL_CLEANUP=1
+
 # do not show env hints during homebrew install process
 export HOMEBREW_NO_ENV_HINTS=1
+
 # tell terminal.app to shut the fuck up about switching the shell to zsh
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
@@ -78,14 +82,14 @@ export TZ='America/Los_Angeles'
 export IS_INTERACTIVE="${IS_INTERACTIVE:-"$(is_interactive 2>&1 && echo -n 1)"}"
 
 if [ -e ~/.DOTFILES_BREW_BUNDLE ]; then
-  export IS_INTERACTIVE="";
-  export DOTFILES_BREW_BUNDLE=1;
+	export IS_INTERACTIVE=""
+	export DOTFILES_BREW_BUNDLE=1
 fi
 
 export DOTFILES_PREFIX="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}"
 # janky solution for platforms (codespaces) cloning into ~/dotfiles rather than ~/.dotfiles
 if [ ! -e "$DOTFILES_PREFIX" ] && [ -e "$HOME/dotfiles" ]; then
-  export DOTFILES_PREFIX="$HOME/dotfiles"
+	export DOTFILES_PREFIX="$HOME/dotfiles"
 fi
 
 # declare some global readonly variables we will be using throughout
@@ -141,69 +145,69 @@ function print_step_complete()
 # does what it says
 function homebrew_determine_prefix()
 {
-  # are we running macOS?
-  if [[ "$(uname -s)" == *[Dd]arwin* ]]; then
-    # check for arm64 (apple silicon) install location (/opt/homebrew)
-    if [ -d "/opt/homebrew/bin" ]; then
-      export HOMEBREW_PREFIX="/opt/homebrew/bin"
-    # no? fallback to /usr/local/bin
-    else
-      export HOMEBREW_PREFIX="/usr/local/bin"
-    fi
-  # no... then how about Linux?
-  elif [[ "$(uname -s)" == [Ll]inux ]]; then
-    # check for linuxbrew folder existence
-    if [ -e "/home/linuxbrew/.linuxbrew/bin" ]; then
-      # set the homebrew prefix variable
-      export HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew/bin"
-    # fallback to /usr/local/bin
-    else
-      export HOMEBREW_PREFIX="/usr/local/bin"
-    fi
-  fi
+	# are we running macOS?
+	if [[ "$(uname -s)" == *[Dd]arwin* ]]; then
+		# check for arm64 (apple silicon) install location (/opt/homebrew)
+		if [ -d "/opt/homebrew/bin" ]; then
+			export HOMEBREW_PREFIX="/opt/homebrew"
+		# no? fallback to /usr/local/bin
+		else
+			export HOMEBREW_PREFIX="/usr/local"
+		fi
+	# no... then how about Linux?
+	elif [[ "$(uname -s)" == [Ll]inux ]]; then
+		# check for linuxbrew folder existence
+		if [ -e "/home/linuxbrew/.linuxbrew/bin" ]; then
+			# set the homebrew prefix variable
+			export HOMEBREW_PREFIX="/home/linuxbrew/.linuxbrew"
+		# fallback to /usr/local/bin
+		else
+			export HOMEBREW_PREFIX="/usr/local"
+		fi
+	fi
 }
 
 # configure homebrew prefix and PATH
 function homebrew_postinstall()
 {
-  # proceed only if HOMEBREW_PREFIX is set and the executable file exists
-  if [ -n "${HOMEBREW_PREFIX-}" ] && [ -x "${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/brew}" ]; then
-    # ensure the homebrew location is in our $PATH
-    if ! echo -n "$PATH" | grep -q "$HOMEBREW_PREFIX"; then
-      export PATH="$HOMEBREW_PREFIX:$PATH"
-    fi
-    printf '\n\033[1;92m ✓ OKAY \033[0;1;2;92m %s \033[0m\n\n' "Homebrew installed at ${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/brew}"
-    echo -e '\neval "$(${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/brew} shellenv)"' >> ~/.bashrc
-    eval "$(${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/brew} shellenv)"
-  else
-    printf '\n\033[1;91m ⚠︎ ERROR \033[0;1;2;91m %s \033[0m\n\n' "Homebrew installation failed!"
-    exit 1
-  fi
+	# proceed only if HOMEBREW_PREFIX is set and the executable file exists
+	if [ -x "${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/bin/brew}" ]; then
+		# ensure the homebrew location is in our $PATH
+		if ! echo -n "$PATH" | grep -q "$HOMEBREW_PREFIX"; then
+			export PATH="$HOMEBREW_PREFIX:$PATH"
+		fi
+		printf '\n\033[1;92m ✓ OKAY \033[0;1;2;92m %s \033[0m\n\n' "Homebrew installed at ${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/bin/brew}"
+		echo -e '\neval "$(${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/bin/brew} shellenv)"' >> ~/.bashrc
+		eval "$(${HOMEBREW_PREFIX:+$HOMEBREW_PREFIX/bin/brew} shellenv)"
+	else
+		printf '\n\033[1;91m ⚠︎ ERROR \033[0;1;2;91m %s \033[0m\n\n' "Homebrew installation failed!"
+		exit 1
+	fi
 }
 
 # install homebrew (if needed)
 function homebrew_install()
 {
-  local INSTALLER_LOCATION="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-  {
-    if command -v curl &>/dev/null; then
-      curl -fsSL "$INSTALLER_LOCATION" | bash - 2>&1
-    elif command -v wget &>/dev/null; then
-      wget -qO- "$INSTALLER_LOCATION" | bash - 2>&1
-    else
-      echo "curl or wget required to install homebrew"
-      return 1
-    fi
-    homebrew_determine_prefix 2>&1 && homebrew_postinstall 2>&1
-  } | tee -a "$DOTFILES_LOG" 2>&1
+	local INSTALLER_LOCATION="https://github.com/Homebrew/raw/install/HEAD/install.sh"
+	{
+		if command -v curl &> /dev/null; then
+			curl -fsSL "$INSTALLER_LOCATION" | bash - 2>&1
+		elif command -v wget &> /dev/null; then
+			wget -qO- "$INSTALLER_LOCATION" | bash - 2>&1
+		else
+			echo "curl or wget required to install homebrew"
+			return 1
+		fi
+		homebrew_determine_prefix 2>&1 && homebrew_postinstall 2>&1
+	} | tee -a "$DOTFILES_LOG" 2>&1
 }
 
 # install some commonly-used global packages. the bare minimum.
 function setup_brew()
 {
 	local HOMEBREW_BUNDLE_FILE
-  # install homebrew if not already installed
-  command -v brew &>/dev/null || homebrew_install
+	# install homebrew if not already installed
+	command -v brew &> /dev/null || homebrew_install
 
 	# set our brewfile location
 	export HOMEBREW_BUNDLE_FILE="$(curdir)/.Brewfile"
@@ -228,8 +232,34 @@ function setup_brew()
 		[ -x "$HOMEBREW_BUNDLE_FILE" ] || chmod +x "$HOMEBREW_BUNDLE_FILE" 2> /dev/null
 		# and then execute it
 		brew bundle install "${verbosity-}" --no-lock 2>&1
-  else
-    unset -v HOMEBREW_BUNDLE_FILE
+	else
+		unset -v HOMEBREW_BUNDLE_FILE
+	fi
+}
+
+function setup_deno()
+{
+	# ENVIRONMENT VARIABLES FROM THE DENO CLI USAGE GUIDE (deno --help):
+	# ---------------------------------------------------------------------------
+	# DENO_AUTH_TOKENS     A semi-colon separated list of bearer tokens and
+	#                      hostnames to use when fetching remote modules from
+	#                      private repositories
+	#                      (e.g. "abcde12345@deno.land;54321edcba@github.com")
+	#
+	# DENO_DIR             Set the cache directory
+	#
+	# DENO_INSTALL_ROOT    Set deno install's output directory
+	#                      (defaults to $HOME/.deno/bin)
+	#
+	# install deno if not already installed or if user is forcing install
+	if [ -z "${DENO_INSTALL:+x}" ] || [ "$DENO_INSTALL" = 1 ]; then
+		# install deno if not already installed
+		if ! command -v deno &> /dev/null; then
+			# install deno
+			curl -fsSL https://deno.land/x/install/install.sh | sh
+		fi
+		# set the deno executable location
+		export DENO_INSTALL="$(command -v deno)"
 	fi
 }
 
@@ -261,14 +291,13 @@ function setup_node()
 	if [ -z "${IS_INTERACTIVE:+x}" ]; then
 		global_add "${global_cli_packages[@]}"
 	else # interactive
-		read -r -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m\033[1;33mInstall CLIs for Vercel/Railway/Netlify/Cloudflare?\033[0m\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
+		read -r -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m⚠  \033[0m\033[1;33mInstall CLIs for Vercel/Cloudflare/Netlify/etc.?\033[0m\n\n\033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
 		local prompt_status=$?
 		echo ''
 
 		if [[ $REPLY == [Yy]* ]] || ((prompt_status > 128)); then
 			global_add "${global_cli_packages[@]-}"
 		fi
-		# STEP_NUM=$((STEP_NUM+1))
 	fi
 
 	return 0
@@ -277,113 +306,117 @@ function setup_node()
 # setup our new homedir with symlinks to all the dotfiles
 function setup_home()
 {
-	local rsyncfiles rsyncexclude rsyncinclude git_file
-  # set the default locations for .rsyncfiles and .rsyncexclude files
-	rsyncexclude="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}/.rsyncexclude"
-	rsyncinclude="${DOTFILES_PREFIX:-"$HOME/.dotfiles"}/.rsyncinclude"
-
-	local -a rsyncargs=("-avh" "--recursive" "--perms" "--times" "--checksum" "--itemize-changes" "--human-readable" "--progress" "--log-file=$DOTFILES_LOG" "--backup" "--backup-dir=$DOTFILES_BACKUP_PATH" "--include-from=${rsyncinclude-}" "--exclude-from=${rsyncexclude-}")
+	# local rsyncfiles rsyncexclude rsyncinclude git_file
+	# rsyncexclude="${DOTFILES_PREFIX-}/.rsyncexclude"
+	# rsyncinclude="${DOTFILES_PREFIX-}/.rsyncinclude"
+	local gitfile
+	local -a rsyncargs=()
 
 	# first off, install rsync if it doesn't exist on the current system
 	if ! command -v rsync &> /dev/null; then
-    command -v brew &>/dev/null || homebrew_install 2>&1;
-		brew install --force --overwrite --quiet rsync coreutils gcc >> "$DOTFILES_LOG" 2>&1
+		command -v brew &> /dev/null || homebrew_install 2>&1
+		brew install --force --overwrite --quiet rsync coreutils gcc
+		# >> "$DOTFILES_LOG" 2>&1
 	fi
 
-	# backup (preserving homedir structure), e.g. /home/gitpod/.dotfiles/.backup/home/gitpod/.bashrc~
-	[ -d "${DOTFILES_BACKUP_PATH-}" ] || mkdir -p -v "${DOTFILES_BACKUP_PATH-}" | tee -i -a "$DOTFILES_LOG" 2>&1
+	# backup (preserving homedir structure), e.g. ~/.dotfiles/.backup/~/.bashrc~
+	[ -d "${DOTFILES_BACKUP_PATH-}" ] || \mkdir -pv "${DOTFILES_BACKUP_PATH-}"
 
+	# .gitignore and .gitconfig are special, so we rename them to avoid issues
+	# with git applying them to the repository instead of the home directory.
+	{
+		for gitfile in gitignore gitconfig; do
+			[ -e "$HOME/.$gitfile" ] \
+				&& \mv -f -v "$HOME/.$gitfile" "$DOTFILES_BACKUP_PATH"
+			\mv -f -v "./$gitfile" "$HOME/.$gitfile"
+		done
+	} | tee -i -a "$DOTFILES_LOG" 2>&1
 
-	# .gitignore and .gitconfig are special!
-	# we have to rename them to avoid issues with git applying them to the repository
-	for git_file in "gitignore" "gitconfig"; do
-		{
-			[ -e ~/."$git_file" ] && mv -f -v ~/."$git_file" "${DOTFILES_BACKUP_PATH-}"
-		} | tee -i -a "$DOTFILES_LOG" 2>&1
-		command cp -f ./gitignore ~/.gitignore
-		command cp -f ./gitconfig ~/.gitconfig
-	done
+	rsyncargs+=("-avh" "--recursive" "--perms" "--times" "--itemize-changes" "--human-readable" "--progress" "--log-file=$DOTFILES_LOG" "--backup" "--backup-dir=$DOTFILES_BACKUP_PATH" "--include-from=.rsyncinclude" "--exclude-from=.rsyncexclude")
 
 	# now do the damn thang!
-	rsync "${rsyncargs[@]}" . ~
+	rsync "${rsyncargs[@]}" . "$HOME"
+	code=$?
 
-	return 0
+	return ${code:-0}
 }
 
 # runs all the other scripts and cleans up after itself. geronimo!
 function main()
 {
 	# make sure we are in the root ~/.dotfiles directory
-	cd "$(curdir)" || return
+	cd "$(curdir)" || return $?
 
 	clear &> /dev/null # clear the screen of any previous output
 
 	print_banner "Spooling up the dotfiles installer..."
 	printf ' \033[1;4m%s\033[0m: %s \n\n' 'Working Dir' "$(curdir)"
 
-  if ! which brew &>/dev/null; then
-    {
-      print_banner "Installing Homebrew..."
-      homebrew_install
-    } >> "$DOTFILES_LOG" 2>&1
-  fi
-
-  if which brew &>/dev/null; then
-    brew install --overwrite rsync coreutils starship gh >> "$DOTFILES_LOG" 2>&1
-  fi
-
-	if [ -z "${DOTFILES_SKIP_NODE:+x}" ]; then
-    if [ -n "${IS_INTERACTIVE:+x}" ]; then
-      print_banner step "$(printf 'Installing \033[1;4;31mPNPM\033[0;1m and \033[4;32mNode\033[0;1;2m v%s\033[0m' "${node_v:-LTS}")"
-      # pin node.js to 16.x to prevent breaking errors in >= 17.x
-      { setup_node "16.16.0" | tee -i -a "$DOTFILES_LOG" 2>&1; } && print_step_complete
-    else
-      setup_node "${node_v:-LTS}" | tee -i -a "$DOTFILES_LOG" 2>&1
-    fi
+	if ! which brew &> /dev/null; then
+		print_banner "Installing Homebrew..."
+		homebrew_install
 	fi
 
-  if [ -z "${DOTFILES_SKIP_HOME:+x}" ]; then
-    # if we are in interactive mode (not in CI/CD), ask the user if they want to proceed
-    if [ -n "${IS_INTERACTIVE:+x}" ]; then
-      # syncing the home directory
-      print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
+	if which brew &> /dev/null; then
+		brew install --overwrite rsync coreutils starship gh
+	fi
 
-      read -r -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m ☢︎ \033[0;1;31m DANGER \033[0m\n
+	if [ -z "${DOTFILES_SKIP_NODE:+x}" ]; then
+		if [ -n "${IS_INTERACTIVE:+x}" ]; then
+			print_banner step "$(printf 'Installing \033[1;4;31mPNPM\033[0;1m and \033[4;32mNode\033[0;1;2m v%s\033[0m' "${node_v:-LTS}")"
+			# pin node.js to 16.x to prevent breaking errors in >= 17.x
+			{
+				setup_node "16.16.0" | tee -i -a "$DOTFILES_LOG" 2>&1
+			} && print_step_complete
+		else
+			setup_node "${node_v:-LTS}" | tee -i -a "$DOTFILES_LOG" 2>&1
+		fi
+	fi
+
+	if [ -z "${DOTFILES_SKIP_HOME:+x}" ]; then
+		# if we are in interactive mode (not in CI/CD), ask the user if they want to proceed
+		if [ -n "${IS_INTERACTIVE:+x}" ]; then
+			# syncing the home directory
+			print_banner step $'Syncing \033[1;4;33mdotfiles\033[0;1m to \033[1;3;4;36m'"$HOME"
+
+			read -r -n 1 -i y -t 30 -p $'\n\033[0;1;5;33m ☢︎ \033[0;1;31m DANGER \033[0m\n
 \033[0;3;31mContinuing with install will overwrite existing files in \033[3;4m'"$HOME"$'\033[0;3;31m.\033[0m\n
 \033[0;1;4;33mAccept and continue?  \033[0;2m ⌚︎ no response in 30s and \033[1m"Yes"\033[0;2m is assumed\n
 \033[0;2m(\033[0;1;4;32mY\033[0;1;2;32mes\033[0;2m / \033[0;1;4;31mN\033[0;1;2;31mo\033[0;2m)\033[0m ... '
-      # if the user says yes, or force, run the install
-      if (($? > 128)) || [[ $REPLY == [Yy]* ]]; then
-        echo ''
-        { setup_home | tee -i -a "$DOTFILES_LOG" 2>&1; } && print_step_complete
-      else
-        echo -e '\n\n\033[1;31mAborted.\033[0m' && return 1
-      fi # $REPLY
-    else
-      # otherwise (automated install), proceed to setting up the homedir
-      setup_home | tee -i -a "$DOTFILES_LOG" 2>&1
-    fi # $-
-  fi
+			# if the user says yes, or force, run the install
+			if (($? > 128)) || [[ $REPLY == [Yy]* ]]; then
+				echo ''
+				{
+					setup_home | tee -i -a "$DOTFILES_LOG" 2>&1
+				} && print_step_complete
+			else
+				echo -e '\n\n\033[1;31mAborted.\033[0m' && return 1
+			fi # $REPLY
+		else
+			# otherwise (automated install), proceed to setting up the homedir
+			setup_home | tee -i -a "$DOTFILES_LOG" 2>&1
+		fi # $-
+	fi
 
-  # skip brew bundle on initial install. we'll do it later.
-  if [ -n "${DOTFILES_BREW_BUNDLE:+x}" ] || [ -e ~/.DOTFILES_BREW_BUNDLE ]; then
-    [ -e ~/.DOTFILES_BREW_BUNDLE ] && rm -f ~/.DOTFILES_BREW_BUNDLE &> /dev/null;
+	# skip brew bundle on initial install. we'll do it later.
+	if [ -n "${DOTFILES_BREW_BUNDLE:+x}" ] || [ -e ~/.DOTFILES_BREW_BUNDLE ]; then
+		[ -e ~/.DOTFILES_BREW_BUNDLE ] && rm -f ~/.DOTFILES_BREW_BUNDLE &> /dev/null
 
-    if [ -n "${IS_INTERACTIVE:+x}" ]; then
-      print_banner step $'Installing/upgrading \033[1;4;35mhomebrew\033[0;1m and required formulae...\033[0m\n\n
+		if [ -n "${IS_INTERACTIVE:+x}" ]; then
+			print_banner step $'Installing/upgrading \033[1;4;35mhomebrew\033[0;1m and required formulae...\033[0m\n\n
 \033[0;1;5;31m ☢︎ \033[0;1;2;3;33mthis may take a while...\033[0m\n'
-      {
-        setup_brew | tee -i -a "$DOTFILES_LOG" 2>&1
-      } && print_step_complete;
-    else
-      setup_brew | tee -i -a "$DOTFILES_LOG" 2>&1
-    fi
-  else
-    touch ~/.DOTFILES_BREW_BUNDLE &> /dev/null;
-    echo -n $'#!/usr/bin/env bash\n## DO NOT EDIT THIS FILE!\n## created by nberlette/dotfiles/install.sh\n' > ~/.DOTFILES_BREW_BUNDLE
-    echo -n $'## '"$(TZ='America/Los_Angeles' date --iso-8601=seconds)"$'\nexport DOTFILES_BREW_BUNDLE=1\n' >> ~/.DOTFILES_BREW_BUNDLE;
-    chmod +x ~/.DOTFILES_BREW_BUNDLE &> /dev/null;
-  fi
+			{
+				setup_brew | tee -i -a "$DOTFILES_LOG" 2>&1
+			} && print_step_complete
+		else
+			setup_brew | tee -i -a "$DOTFILES_LOG" 2>&1
+		fi
+	else
+		touch ~/.DOTFILES_BREW_BUNDLE &> /dev/null
+		echo -n $'#!/usr/bin/env bash\n## DO NOT EDIT THIS FILE!\n## created by nberlette/dotfiles/install.sh\n' > ~/.DOTFILES_BREW_BUNDLE
+		echo -n $'## '"$(TZ='America/Los_Angeles' date --iso-8601=seconds)"$'\nexport DOTFILES_BREW_BUNDLE=1\n' >> ~/.DOTFILES_BREW_BUNDLE
+		chmod +x ~/.DOTFILES_BREW_BUNDLE &> /dev/null
+	fi
 
 	for cmd_alias in gpg gh starship; do
 		# symlink the alias to the actual command for any missing binaries
@@ -403,10 +436,9 @@ function cleanup_env()
 	unset -f main setup_home setup_node setup_brew print_step_complete print_banner global_add is_interactive 2> /dev/null
 }
 
-# run dat shizzle
 {
 	main "$@" || code=$?
-}
-
-# shellcheck disable=SC2248
-cleanup_env && unset -f cleanup_env &> /dev/null && exit ${code:-0}
+	# shellcheck disable=SC2248
+	cleanup_env && unset -f cleanup_env &> /dev/null
+} >> "$DOTFILES_LOG" 2>&1
+exit ${code:-0}

@@ -77,15 +77,16 @@ function __gpg_reload()
 
 function __gpg_count_keys()
 {
-  local key_id=""
-  if [ -n "$1" ]; then
-    key_id="$1"; shift;
-    # shellcheck disable=SC2005
-    echo "$(gpg -K "${key_id:+$key_id}" 2>/dev/null | grep sec --count 2>/dev/null)" | tr -d $'\n'
-  else
-    # shellcheck disable=SC2005
-    echo "$(gpg -K | grep sec --count 2>/dev/null)" | tr -d $'\n'
-  fi
+	local key_id=""
+	if [ -n "$1" ]; then
+		key_id="$1"
+		shift
+		# shellcheck disable=SC2005
+		echo "$(gpg -K "${key_id:+$key_id}" 2> /dev/null | grep sec --count 2> /dev/null)" | tr -d $'\n'
+	else
+		# shellcheck disable=SC2005
+		echo "$(gpg -K | grep sec --count 2> /dev/null)" | tr -d $'\n'
+	fi
 }
 
 # super hacky "fix" (bandaid on a bullethole tbh) for gpg failure to initialize
@@ -100,9 +101,9 @@ function gpg_init()
 }
 
 # check if our GPG key and key id have been set in the environment
-if [[ -n "${GPG_KEY:+x}" || -n "${GPG_PRIVATE_KEY:+x}" ]] && [ -n "$GPG_KEY_ID" ]; then
-    # check if the secret key has been configured with gpg
-    if [ "$(__gpg_count_keys "${GPG_KEY_ID-}")" -gt 0 ]; then
-      __gpg_setup 2> /dev/null
-    fi
+if [[ -n ${GPG_KEY:+x} || -n ${GPG_PRIVATE_KEY:+x} ]] && [ -n "$GPG_KEY_ID" ]; then
+	# check if the secret key has been configured with gpg
+	if [ "$(__gpg_count_keys "${GPG_KEY_ID-}")" -gt 0 ]; then
+		__gpg_setup 2> /dev/null
+	fi
 fi

@@ -1,6 +1,6 @@
 {
   "name": "@brlt/dotfiles",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "license": "MIT",
   "author": {
     "name": "Nicholas Berlette",
@@ -22,7 +22,7 @@
     "bash",
     "shell"
   ],
-  "packageManager": "pnpm@7.1.7",
+  "packageManager": "pnpm@7.7.0",
   "publishConfig": {
     "access": "public"
   },
@@ -61,17 +61,17 @@
     "@brlt/n": "^0.1.1",
     "@brlt/prettier": "~1.8.2",
     "@brlt/utils": "^0.0.1",
-    "eslint": "^8.16.0",
+    "eslint": "^8.21.0",
     "esno": "^0.16.3",
     "npm-run-all": "4.1.5",
-    "pnpm": "^7.1.7",
-    "prettier": "^2.6.2",
-    "prettier-plugin-sh": "^0.11.0",
+    "pnpm": "^7.8.0",
+    "prettier": "^2.7.1",
+    "prettier-plugin-sh": "^0.12.8",
     "shellcheck": "^1.1.0",
     "templette": "^1.0.0",
-    "tsup": "^6.0.1",
-    "typescript": "^4.7.2",
-    "zx": "^6.1.0"
+    "tsup": "^6.2.1",
+    "typescript": "^4.7.4",
+    "zx": "^7.0.8"
   },
   "pnpm": {
     "peerDependencyRules": {

@@ -32,7 +32,7 @@ readme*
 .git/
 .github/
 .gitignore
-.gitconfig
+# .gitconfig
 .gitpod.yml
 gitignore
 gitconfig

@@ -1,5 +1,5 @@
 ## ------------------------------------------------------------------------ ##
-##  .Brewfile                                Nicholas Berlette, 2022-05-31  ##
+##  .Brewfile                                Nicholas Berlette, 2022-08-03  ##
 ## ------------------------------------------------------------------------ ##
 ##        https://github.com/nberlette/dotfiles/blob/main/.Brewfile         ##
 ## ------------------------------------------------------------------------ ##
@@ -11,14 +11,14 @@
 tap "homebrew/bundle"
 tap "homebrew/core"
 tap "supabase/tap"
-# Bourne-Again SHell, a UNIX command interpreter
-brew "bash"
 # Cross-platform make
 brew "cmake"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
 # Collection of Linux utilities
 brew "util-linux"
+# Secure JS/TS runtime, written in Rust
+brew "deno"
 # Pack, ship and run any application as a lightweight container
 brew "docker"
 # Command-line fuzzy finder written in Go
@@ -27,20 +27,8 @@ brew "fzf"
 brew "gcc"
 # GitHub command-line tool
 brew "gh"
-# Distributed revision control system
-brew "git"
 # Small git utilities
 brew "git-extras"
-# Command-line interface for SQLite
-brew "sqlite"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.9"
-# Core application library for C
-brew "glib"
-# GNU Transport Layer Security (TLS) Library
-brew "gnutls"
-# Library for USB device access
-brew "libusb"
 # GNU Pretty Good Privacy (PGP) package
 brew "gnupg"
 # Open source programming language to build simple/reliable/efficient software
@@ -49,8 +37,6 @@ brew "go"
 brew "jq"
 # Rainbows and unicorns in your console!
 brew "lolcat"
-# Utility for directing compilation
-brew "make"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Generic syntax highlighter
@@ -63,7 +49,7 @@ brew "shellcheck"
 brew "shfmt"
 # Cross-shell prompt for astronauts
 brew "starship"
-# Access X11 clipboards from the command-line
-brew "xclip"
 # Supabase CLI
 brew "supabase/tap/supabase"
+# Access X11 clipboards from the command-line
+brew "xclip"

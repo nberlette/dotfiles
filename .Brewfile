@@ -11,6 +11,8 @@
 tap "homebrew/bundle"
 tap "homebrew/core"
 tap "supabase/tap"
+# GitHub Actions local test runner
+brew "act"
 # Cross-platform make
 brew "cmake"
 # GNU File, Shell, and Text utilities

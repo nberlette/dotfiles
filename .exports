@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TZ="America/Los_Angeles"
+TZ="${TZ:-"America/Los_Angeles"}"
 export TZ
 
 CLICOLOR=1
@@ -100,3 +100,7 @@ export HOMEBREW_NO_INSTALL_CLEANUP HOMEBREW_NO_ENV_HINTS
 # tell terminal.app to shut the fuck up about switching the shell to zsh
 BASH_SILENCE_DEPRECATION_WARNING=1
 export BASH_SILENCE_DEPRECATION_WARNING
+
+DENO_INSTALL="$HOME/.deno"
+DENO_INSTALL_ROOT="$DENO_INSTALL/bin"
+export DENO_INSTALL DENO_INSTALL_ROOT

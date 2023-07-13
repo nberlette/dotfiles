@@ -1,6 +1,6 @@
-GIT_AUTHOR_NAME="Nicholas Berlette"
-GIT_AUTHOR_EMAIL="nick@berlette.com"
-GIT_COMMITTER_NAME="Nicholas Berlette"
-GIT_COMMITTER_EMAIL="nick@berlette.com"
+# GIT_AUTHOR_NAME="Nicholas Berlette"
+# GIT_AUTHOR_EMAIL="nick@berlette.com"
+# GIT_COMMITTER_NAME="Nicholas Berlette"
+# GIT_COMMITTER_EMAIL="nick@berlette.com"
 
 TZ="America/Los_Angeles"

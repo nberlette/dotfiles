@@ -26,7 +26,7 @@ vscode:
     - vsls-contrib.gistfs
     - timonwong.shellcheck
     - eg2.vscode-npm-script
-    - github.copilot-nightly
+    - github.copilot
     - esbenp.prettier-vscode
     - dbaeumer.vscode-eslint
     - naumovs.color-highlight
@@ -37,3 +37,8 @@ vscode:
     - ms-azuretools.vscode-docker
     - christian-kohler.npm-intellisense
     - christian-kohler.path-intellisense
+    - denoland.vscode-deno
+    - gitpod.gitpod-remote-ssh
+    - gitpod.gitpod-desktop
+    - akosyakov.gitpod-monitor
+    - github.github-vscode-theme

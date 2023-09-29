@@ -8,8 +8,8 @@
 ## ------------------------------------------------------------------------ ##
 
 
-export PATH="${PATH:-"$HOME/.bin:$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/sbin"}"
-export PATH="$HOME/.bin:$HOME/.local/bin:$HOME/.dotfiles/.bin:$PATH"
+PATH="${PATH:-"$HOME/.bin:$HOME/.local/bin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin:/usr/local/sbin"}"
+PATH="$HOME/.bin:$HOME/.local/bin:$HOME/.dotfiles/.bin:$PATH"
 
 if [ -z "$HOMEBREW_PREFIX" ]; then
   if ! which brew &>/dev/null; then
@@ -19,25 +19,27 @@ if [ -z "$HOMEBREW_PREFIX" ]; then
 fi
 
 HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-"$(brew --prefix)"}"
-export HOMEBREW_PREFIX
+export HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/usr/local}"
 
 export GOPATH="$HOME/.go"
-export PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
+PATH="/usr/local/go/bin:$GOPATH/bin:$PATH"
+
 export CDPATH="$CDPATH:$GOPATH/src/github.com:$GOPATH/src/golang.org:$GOPATH/src"
-export PATH="$HOME/.cargo/bin:$PATH"
-export PATH="/usr/share/bcc/tools:$PATH"
+PATH="$HOME/.cargo/bin:/usr/share/bcc/tools:$PATH"
+
 export CXXFLAGS="$CXXFLAGS -stdlib=libc++ -Wno-deprecated-declarations -Wno-deprecated -framework CoreFoundation"
-export PATH="${HOMEBREW_PREFIX-}/opt/llvm/bin:$PATH"
-export PATH="${HOMEBREW_PREFIX-}/opt/mysql-client/bin:$PATH"
+PATH="${HOMEBREW_PREFIX-}/opt/mysql-client/bin:${HOMEBREW_PREFIX-}/opt/llvm/bin:$PATH"
+
 export MYSQL_INCLUDE_DIR="${HOMEBREW_PREFIX-}/opt/mysql-client/include/mysql"
 export BOOST_INCLUDE_DIR="${HOMEBREW_PREFIX-}/include"
-export PATH="${HOMEBREW_PREFIX-}/opt/openssl/bin:$PATH"
+
 export LDFLAGS="$LDFLAGS -L${HOMEBREW_PREFIX-}/opt/openssl/lib"
 export CPPFLAGS="$CPPFLAGS -I${HOMEBREW_PREFIX-}/opt/openssl/include"
 export OPENSSL_ROOT_DIR="${HOMEBREW_PREFIX-}/opt/openssl"
 export PKG_CONFIG_PATH="${HOMEBREW_PREFIX-}/opt/openssl/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+PATH="${HOMEBREW_PREFIX-}/opt/openssl/bin:$PATH"
 
-export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+PATH="${HOMEBREW_PREFIX-}/opt/gnu-getopt/bin:$PATH"
 if [ -d "${HOMEBREW_PREFIX:-/usr/local}/opt" ]; then
   for utility in coreutils make findutils gnu-sed; do
     # prepend utility bin to the path
@@ -49,7 +51,7 @@ if [ -d "${HOMEBREW_PREFIX:-/usr/local}/opt" ]; then
       export MANPATH="${HOMEBREW_PREFIX:-/usr/local}/opt/${utility-}/libexec/gnubin:$MANPATH";
   done
 fi
-export PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
+PATH="/usr/local/opt/gnu-getopt/bin:$PATH"
 
 if [ -z "$PNPM_HOME" ]; then
   # linux
@@ -62,17 +64,22 @@ if [ -z "$PNPM_HOME" ]; then
     export PNPM_HOME="$(dirname -- "$(which pnpm 2>/dev/null)")"
   fi
 fi
-export PATH="${PNPM_HOME:+"$PNPM_HOME:"}$PATH"
 
 if [[ "$(uname)" == "Darwin" ]]; then 
   # Setting PATH for Python 3.10
-  export PATH="/Library/Frameworks/Python.framework/Versions/3.10/bin:${PATH}";
-  [ -d "$HOME/.iterm2" ] && export PATH="$HOME/.iterm2:$PATH";
+  PATH="/Library/Frameworks/Python.framework/Versions/3.10/bin:${PATH}";
+  [ -d "$HOME/.iterm2" ] && PATH="$HOME/.iterm2:$PATH";
 
 fi
 
-export DENO_HOME="$HOME/.deno/bin"
-[[ $PATH == *:$DENO_HOME:* ]] || export PATH="$DENO_HOME:$PATH";
+export PNPM_HOME="${PNPM_HOME:-"$(dirname -- "$(which pnpm &>/dev/null)")"}"
 
-# dedupe it
-export PATH="$(dedupe_path 2>/dev/null || echo -n "$PATH")"
+export DENO_INSTALL="$HOME/.deno" 
+export DENO_INSTALL_ROOT="$DENO_INSTALL/bin"
+
+export BUN_INSTALL="$HOME/.bun"
+
+PATH="$BUN_INSTALL:$DENO_INSTALL_ROOT:$PNPM_HOME:$PATH"
+
+# dedupe and export the final product :)
+export PATH="$(dedupe_path 2>/dev/null || printf "$PATH")"

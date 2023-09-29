@@ -87,10 +87,6 @@ DOCKER_CONTENT_TRUST=1
 XDG_DATA_DIRS=/usr/share/
 export GO15VENDOREXPERIMENT DOCKER_CONTENT_TRUST XDG_DATA_DIRS
 
-# export PNPM homedir to unify the virtual dependency store
-PNPM_HOME="${PNPM_HOME:-"$(dirname -- "$(which pnpm)")"}"
-export PNPM_HOME
-
 # do not automatically cleanup after installing homebrew packages
 HOMEBREW_NO_INSTALL_CLEANUP=1
 # do not show env hints during homebrew install process
@@ -100,7 +96,3 @@ export HOMEBREW_NO_INSTALL_CLEANUP HOMEBREW_NO_ENV_HINTS
 # tell terminal.app to shut the fuck up about switching the shell to zsh
 BASH_SILENCE_DEPRECATION_WARNING=1
 export BASH_SILENCE_DEPRECATION_WARNING
-
-DENO_INSTALL="$HOME/.deno"
-DENO_INSTALL_ROOT="$DENO_INSTALL/bin"
-export DENO_INSTALL DENO_INSTALL_ROOT
